@@ -1,0 +1,126 @@
+00000000000i[APIC?] local apic in  initializing
+========================================================================
+                       Bochs x86 Emulator 2.2.1
+                Build from CVS snapshot on July 8, 2005
+========================================================================
+00000000000i[     ] reading configuration from bochsrc.txt
+------------------------------
+Bochs Configuration: Main Menu
+------------------------------
+
+This is the Bochs Configuration Interface, where you can describe the
+machine that you want to simulate.  Bochs has already searched for a
+configuration file (typically called bochsrc.txt) and loaded it if it
+could be found.  When you are satisfied with the configuration, go
+ahead and start the simulation.
+
+You can also start bochs with the -q option to skip these menus.
+
+1. Restore factory default configuration
+2. Read options from...
+3. Edit options
+4. Save options to...
+5. Begin simulation
+6. Quit now
+
+Please choose one: [5]
+00000000000i[     ] installing win32 module as the Bochs GUI
+00000000000i[     ] Warning: no rc file specified.
+00000000000i[     ] using log file bochsout.txt
+Next at t=0
+(0) [0xfffffff0] f000:fff0 (unk. ctxt): jmp far f000:e05b         ; ea5be000f0
+<bochs:1> c
+Next at t=1028973
+(0) [0x00003b94] 0010:c0003b94 (unk. ctxt): hlt                       ; f4
+<bochs:2> n
+Next at t=229077669
+(0) [0x00003b95] 0010:c0003b95 (unk. ctxt): nop                       ; 90
+<bochs:3> n
+Next at t=229077670
+(0) [0x00003b97] 0010:c0003b97 (unk. ctxt): mov eax, dword ptr ds:0xc0008ac0 ; a
+1c08a00c0
+<bochs:4> n
+Next at t=229077671
+(0) [0x00003b9c] 0010:c0003b9c (unk. ctxt): mov ss, word ptr ds:[eax] ; 8e10
+<bochs:5> dump_cpu
+eax:0xc0008890, ebx:0x000003ff, ecx:0x00000050, edx:0x00000034
+ebp:0x0008ffa8, esp:0x0008ffa0, esi:0xc0003b6a, edi:0xc0000296
+eip:0xc0003b9c, eflags:0x00000016, inhibit_mask:0
+cs:s=0x0010, dl=0x0000ffff, dh=0x00cf9a00, valid=1
+ss:s=0x0008, dl=0x0000ffff, dh=0x00cf9300, valid=7
+ds:s=0x0008, dl=0x0000ffff, dh=0x00cf9300, valid=7
+es:s=0x0008, dl=0x0000ffff, dh=0x00cf9300, valid=1
+fs:s=0x0008, dl=0x0000ffff, dh=0x00cf9300, valid=1
+gs:s=0x0008, dl=0x0000ffff, dh=0x00cf9300, valid=1
+ldtr:s=0x0000, dl=0x00000000, dh=0x00000000, valid=0
+tr:s=0x0028, dl=0x8a500067, dh=0x00008900, valid=1
+gdtr:base=0x00000160, limit=0x2f
+idtr:base=0x00000196, limit=0x7ff
+dr0:0x00000000, dr1:0x00000000, dr2:0x00000000
+dr3:0x00000000, dr6:0xffff0ff0, dr7:0x00000400
+cr0:0x80000011, cr1:0x00000000, cr2:0x00000000
+cr3:0x00004000, cr4:0x00000000
+done
+<bochs:6> xp /20wx 0x8890
+[bochs]:
+0x00008890 <bogus+       0>:    0x00000008      0x00100fff      0x00000000
+0x00000000
+0x000088a0 <bogus+      16>:    0x00000000      0x00000000      0x00000000
+0x00000008
+0x000088b0 <bogus+      32>:    0x00101fff      0x00000000      0x00000000
+0x00000000
+0x000088c0 <bogus+      48>:    0x00000001      0x00000000      0x00000008
+0x00102fff
+0x000088d0 <bogus+      64>:    0x00000000      0x00000000      0x00000000
+0x00000002
+<bochs:7> xp /20wx 0x8ac0
+[bochs]:
+0x00008ac0 <bogus+       0>:    0xc0008890      0x00000000      0x00000000
+0x00000000
+0x00008ad0 <bogus+      16>:    0xc0008890      0x00000000      0x00000000
+0x00000000
+0x00008ae0 <bogus+      32>:    0x00000000      0x00000000      0x00000000
+0x00000000
+0x00008af0 <bogus+      48>:    0x00000000      0x00000000      0x00000000
+0x00000000
+0x00008b00 <bogus+      64>:    0x00000000      0x00000000      0x00000000
+0x00000000
+<bochs:8> n
+Next at t=229077672
+(0) [0x00003b9e] 0010:c0003b9e (unk. ctxt): mov eax, dword ptr ds:0xc0008ac4 ; a
+1c48a00c0
+<bochs:9> n
+Next at t=229077673
+(0) [0x00003ba3] 0010:c0003ba3 (unk. ctxt): mov esp, dword ptr ds:[eax] ; 8b20
+<bochs:10> n
+Next at t=229077674
+(0) [0x00003ba5] 0010:c0003ba5 (unk. ctxt): mov dword ptr ds:0xc0008a54, eax ; a
+3548a00c0
+<bochs:11> info registers
+eax            0x0              0
+ecx            0x50             80
+edx            0x34             52
+ebx            0x3ff            1023
+esp            0x665064d        0x665064d
+ebp            0x8ffa8          0x8ffa8
+esi            0xc0003b6a       -1073726614
+edi            0xc0000296       -1073741162
+eip            0xc0003ba5       0xc0003ba5
+eflags         0x16             22
+cs             0x10             16
+ss             0x8              8
+ds             0x8              8
+es             0x8              8
+fs             0x8              8
+gs             0x8              8
+<bochs:12> n
+Next at t=229077675
+(0) [0x00003baa] 0010:c0003baa (unk. ctxt): mov ax, ss                ; 8cd0
+<bochs:13> n
+Next at t=229077676
+(0) [0x00003bac] 0010:c0003bac (unk. ctxt): mov dword ptr ds:0xc0008a58, eax ; a
+3588a00c0
+<bochs:14> n
+Next at t=229077677
+(0) [0x00003bb1] 0010:c0003bb1 (unk. ctxt): popad                     ; 61
+<bochs:15>

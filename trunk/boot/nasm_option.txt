@@ -1,0 +1,34 @@
+usage: nasm [-@ response file] [-o outfile] [-f format] [-l listfile]
+            [options...] [--] filename
+    or nasm -r   for version info (obsolete)
+    or nasm -v   for version info (preferred)
+
+    -t          Assemble in SciTech TASM compatible mode
+    -g          Generate debug information in selected format.
+    -e          preprocess only (writes output to stdout by default)
+    -a          don't preprocess (assemble only)
+    -M          generate Makefile dependencies on stdout
+
+    -E<file>    redirect error messages to file
+    -s          redirect error messages to stdout
+
+    -F format   select a debugging format
+
+    -I<path>    adds a pathname to the include file path
+    -O<digit>   optimize branch offsets (-O0 disables, default)
+    -P<file>    pre-includes a file
+    -D<macro>[=<value>] pre-defines a macro
+    -U<macro>   undefines a macro
+    -X<format>  specifies error reporting format (gnu or vc)
+    -w+foo      enables warnings about foo; -w-foo disables them
+where foo can be:
+    macro-params            macro calls with wrong no. of params (default off)
+    macro-selfref           cyclic macro self-references (default off)
+    orphan-labels           labels alone on lines without trailing `:' (default off)
+    number-overflow         numeric constants greater than 0xFFFFFFFF (default on)
+    gnu-elf-extensions      using 8- or 16-bit relocation in ELF, a GNU extension (default off)
+
+response files should contain command line parameters, one per line.
+
+For a list of valid output formats, use -hf.
+For a list of debug formats, use -f <form> -y.

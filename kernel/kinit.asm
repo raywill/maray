@@ -595,3 +595,4 @@ kernel_stack dd 0		;save kernel esp
 [section .bss]
 knrl_stack:
 
+; vim: syntax=nasm ts=8 st=4

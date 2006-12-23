@@ -1,9 +1,0 @@
-
-G:\HUSTOS\osc7\kernel>make
-gcc -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -I../include -c -omemory.o memory.c
-
-G:\HUSTOS\osc7\kernel>make install 
-copy /b ..\boot\boot.bin+kernel.bin ..\new.bin
-..\BOOT\BOOT.BIN
-KERNEL.BIN
-        1 file(s) copied

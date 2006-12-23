@@ -29,8 +29,8 @@ void init_timer()
 {
 	int max;
 	vector_t v;
-	
-	timefly=0;
+
+	timefly = 0;
 	
 	/*00,use IRQ timer,00:read 2 bytes,low &high;
 		  011,mode 3(square wave);0,binary mode*/
@@ -38,6 +38,8 @@ void init_timer()
 	outportb(0x43,0x36);	/*0000110110b=0x36*/
 	outportb(0x40, max & 0xff);//LSB
 	outportb( 0x40,max >> 8 );//MSB
+
+	enable_timer(); /* timer enable here, no longer use keyboard */
 	
 	//install the timer handler
    	//v.eip = (unsigned)timer_irq;
@@ -65,12 +67,13 @@ void timer_irq()
 	timefly++;
 	if(timefly%2==0)
 	{
-		char buf[20];
+		char buf[25];
 		int oldx,oldy;
 		cli();
 		getxy(&oldx,&oldy);
 		gotoxy(60,23);
-		kprint(itoa((int)timefly,buf,10));
+		kprint(itoa(timefly,buf,10));
+		//kprint("ok\n");
 		gotoxy(50,21);
 		kprint( timetostr(update_sys_time(timefly),buf) );
 		gotoxy(oldx,oldy);

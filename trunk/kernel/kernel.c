@@ -17,9 +17,8 @@
 #include <maray/clock.h>
 
 /*extern void enable_paging(void);*/
-extern void install_syscall(void);
-
-
+void install_syscall(void);
+void start_first_process();
 
 sys_time start_tm;
 sys_time real_tm;
@@ -37,7 +36,7 @@ void osmain( void )
 	
 	
 	/* ini screen first,so that we can output info as early as possible */
-	init_tty();	/*	initialize the screen											*/		
+	init_tty();	/*	initialize the screen*/	
    	kprint( "TTY initialized\n" );
 	
 	init_mm();
@@ -45,23 +44,25 @@ void osmain( void )
 	
 	init_irq();	/*initialize irq,with all interrupte disabled.*/
    	kprint( "IRQ initialized\n" );
-	
-	init_kb();	/* set keyboard IRQ,and enable it							*/
-    kprint( "Keyboard initialized\n" );
-    
-	init_timer();	/* initialize time,enalbe timer irq					*/
-	kprint( "Timer initialized\n" );
-	
-	init_system_clock(&start_tm);
-	init_system_clock(&real_tm);	
-	kprint("System start time is ");
-	kprint(timetostr(&start_tm,tmbuf));
-	
-	kprint("\nHello");
+   
+	kprint("\nHello\n");
 	install_syscall();
 	
 	init_all_tasks();
-	
+
+	init_timer(); /* initialize time, enable timer irq */
+	init_system_clock(&real_tm);
+	kprint( "Timer initialized\n");
+	init_system_clock(&start_tm);
+	kprint("System start time is ");
+	kprint(timetostr(&start_tm, tmbuf));
+
+	init_kb();	/* set keyboard IRQ,and enable it */
+	kprint( "\nKeyboard initialized\n" );
+ 
+	kprint("Starting first process....\n");
+	start_first_process();
+
 	kprint( "\nNow I am doing a loop ,waiting for interrupt :)\n" );
 	
 	while(1);

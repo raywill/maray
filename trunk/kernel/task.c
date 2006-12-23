@@ -57,7 +57,6 @@ void sleep(void);
 	#define TIME_SLICE 0x50
 
 extern ULONG  page_directory;
-extern void   start_first_process(); 
 
 struct task_struct *current,*last;
 void test_task0(void);
@@ -115,7 +114,7 @@ void test_task0(void){
 	print("Hello from task 0\n");
 
 //	debug_halt();
-	print("Again from 0");
+	print("Again from 0\n");
 //	print(itoa(i,buf) );
 	while(1){
 		;
@@ -174,9 +173,9 @@ void init_all_tasks()
 	k_ltr();
 
 	//Alloc memory for task list:
-	task0=(struct task_struct *)kmalloc(sizeof(struct task_struct));
-	task1=(struct task_struct *)kmalloc(sizeof(struct task_struct));
-	task2=(struct task_struct *)kmalloc(sizeof(struct task_struct));
+	task0=kmalloc(sizeof(struct task_struct));
+	task1=kmalloc(sizeof(struct task_struct));
+	task2=kmalloc(sizeof(struct task_struct));
 
 
 	
@@ -257,12 +256,10 @@ void init_all_tasks()
 //	tss.ss0=__KERNEL_DS;
 
 
-		last=current=task_struct_list[1];
+	last=current=task_struct_list[0];
 //  last=(void *)0; 
   
-		kprint("Starting first process....\n");
-		start_first_process();
-		}
+}
 
 void schedule(void)
 {

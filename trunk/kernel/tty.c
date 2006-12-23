@@ -20,6 +20,7 @@
 unsigned short* const VIDMEM = ((unsigned short*) 0xB8000);
 unsigned long* const XVIDMEM = ((unsigned long*) (0xB8000+0xC0000000));
 static void clear( void );
+static void set_cursor(int pos);
 
 unsigned short * vp;
 
@@ -28,6 +29,21 @@ void init_tty(void)
 	vp=VIDMEM;
 	clear();
 }
+
+// Set blinking cursor postion
+static void set_cursor(int cursorpos)
+{
+	
+	outportb(0x3D4, 14);                       // write to register 14 first
+
+	outportb(0x3D5, (cursorpos>>8) & 0xFF);     // output high byte
+
+	outportb(0x3D4, 15);                       // again to register 15
+
+	outportb(0x3D5, cursorpos & 0xFF);          // low byte in this register
+		
+}
+
 
 void clrscr(void)
 {
@@ -124,6 +140,7 @@ void kprint( const char* str )
         	}
         *vp++ = (0x0600 | ((unsigned short) *str++));
     }
+	set_cursor(vp-VIDMEM);
 
 }
 
@@ -156,6 +173,7 @@ void print( const char* str )
         	}
         *vp++ = (0x0600 | ((unsigned short) *str++));
     }
+	//set_cursor((int)(vp-VIDMEM));
 // __asm volatile("int %0" ::"i" (0x80));
 		sys_unlock();
 

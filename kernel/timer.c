@@ -11,13 +11,16 @@
 #include <i386/vector.h>
 #include <i386/irq.h>
 #include <i386/timer.h>
+#include <maray/clock.h>
 #include <maray/tty.h>
 #include <asmcmd.h>
 #include <libc.h>
 /*'tick' time elapse*/
-int timefly;
+unsigned int timefly, last_timefly;
 extern void schedule();		
 void timer_irq();
+
+extern sys_time real_tm;
 
 /*
 *how do we init timer:
@@ -49,7 +52,9 @@ void init_timer()
 
 void enable_timer()
 {
+	init_system_clock(&real_tm);
 	enable_irq(TIMER_IRQ);
+	timefly = last_timefly = 0;
 }
 
 void disable_timer()
@@ -69,7 +74,6 @@ void timer_irq()
 	{
 		char buf[25];
 		int oldx,oldy;
-		cli();
 		getxy(&oldx,&oldy);
 		gotoxy(60,23);
 		kprint(itoa(timefly,buf,10));
@@ -77,7 +81,6 @@ void timer_irq()
 		gotoxy(50,21);
 		kprint( timetostr(update_sys_time(timefly),buf) );
 		gotoxy(oldx,oldy);
-		sti();
 	}
 	schedule();
 	

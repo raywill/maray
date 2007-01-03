@@ -13,13 +13,14 @@
 #include <i386/vector.h>	/*	setvect()			*/
 #include <libc.h>					/*	inportb()	,outportb()		*/
 #include <i386/timer.h>
+#include <maray/tty.h>
 
 #define LED_SRL 1
 #define LED_NUM 2
 #define LED_CAP 4
 
 static void kb_irq(void);
-static set_leds(unsigned char TYPE);
+static void set_leds(unsigned char TYPE);
 
 byte Scan_Tab[ ] =
 {
@@ -81,7 +82,7 @@ static void kb_irq(void)
 }
 
 
-static kb_wait()
+static void kb_wait()
 {
 /* while(1) will do a infinite loop if ret value is not equal to 0x02
 this is really not nice.
@@ -97,7 +98,7 @@ return;
 	}
 	
 }
-static kb_ack()
+static void kb_ack()
 {
 	int i;
 	for(i=0;i<0xFFFFF;i++)
@@ -108,7 +109,7 @@ static kb_ack()
 	}
 }
 
-static set_leds(unsigned char TYPE)
+static void set_leds(unsigned char TYPE)
 {
 /*
 bits 3-7: Must be zero.

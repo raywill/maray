@@ -202,8 +202,13 @@ void init_all_tasks()
 		task_struct_list[t]->cr3=0;
 		task_struct_list[t]->state=0;
 		task_struct_list[t]->timelapse=TIME_SLICE;
-		task_struct_list[t]->timewait=0;		
+		task_struct_list[t]->timewait=0;
+		/*
+		 * i don't think it's nesscessary and
+		 * kmemset() is not good for a two-byte-long 0x20
+		 * 
 		kmemset(task_struct_list[t]->console.con,80*25*2,0);
+		*/
 		task_struct_list[t]->console.x=0;
 		task_struct_list[t]->console.y=0;		
 //		task_struct_list[t]->vbuffer=0xC0070fff+t*80*25*2;
@@ -218,8 +223,8 @@ void init_all_tasks()
 /* This is for debugging... */
 		//*--sp=__KERNEL_DS;//__USER_DS;	  
 		*--sp=0x100000+0x19000*(t+1);/*100K stack per task*/
-		*--sp=0x0202; 						/*EFlags,Interrupt flag enable ,bit one should set to be 1*/
-		*--sp=0x23;								//__USER_CS;
+		*--sp=0x0202;	/*EFlags,Interrupt flag enable ,bit one should set to be 1*/
+		*--sp=0x23; /* __USER_CS; */
 
 /* This is for debugging... */	  
 		//*--sp=__KERNEL_CS;//__USER_CS;	  

@@ -3,7 +3,7 @@
 
 void init_mm();
 void kfree(void *free_ptr,unsigned size);
-const void * kmalloc(unsigned size);
+void * kmalloc(unsigned size);
 
 
 

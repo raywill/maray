@@ -89,21 +89,18 @@ unsigned inportb(unsigned short port)
 }
 
 
-void kmemcpy(unsigned char *scr,unsigned char *dest,unsigned long size)
+void kmemcpy(const void *scr, void *dest,unsigned long size)
 {
-	unsigned char *s=scr,*d=dest;
-	cli();
+	const char *s = scr;
+	char *d = dest;
 	if(size<0) return;
 	while(size--)
 		*d++=*s++;
-	sti();
 }
 void kmemset(void *dest,unsigned long size,char c)
 {
-	unsigned char *d=(unsigned char *)dest;
-	cli();
+	char *d = dest;
 	if(size<0) return;
 	while(size--)
 		*d++=c;
-	sti();
 }

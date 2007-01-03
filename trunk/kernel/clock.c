@@ -24,6 +24,7 @@
 
 extern sys_time real_tm;
 extern sys_time start_tm;
+extern unsigned long last_timefly;
 
 unsigned 
 char rtc_cmos_read(unsigned char addr)
@@ -113,9 +114,8 @@ timetostr(sys_time *ptm,char *tstr)
 
 
 sys_time *
-update_sys_time(int timefly)
+update_sys_time(unsigned int timefly)
 {
-	static int last_timefly = 0;
         int d_timefly;
         int d_sec;
 

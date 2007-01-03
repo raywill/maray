@@ -79,7 +79,7 @@ void init_hole(struct hole *holes)
 Search from the beginning of the free space list
 Use FIRST_FIT_ALGROTHIM
 */
-const void * kmalloc(unsigned int  size){
+void * kmalloc(unsigned int  size){
 	struct hole *h=hole_head;
 	struct hole *front=h;
 	struct hole *h_prev=NULL;

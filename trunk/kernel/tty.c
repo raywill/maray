@@ -11,6 +11,7 @@
 #include <maray/tty.h>
 #include <i386/task.h>
 #include <asmcmd.h>
+#include <libc.h>
 
 
 #define TAB_SIZE 8
@@ -66,8 +67,8 @@ static void clear( void )
 {
     int i;
     for (i = 0; i < 80 * 25 ; i++)
-        *vp++ = 0;
-		vp = VIDMEM;
+        *vp++ = 0x20;
+    vp = VIDMEM;
 }
 
 /*
@@ -97,23 +98,19 @@ void set_console(struct task_struct *sel)
 void save_console(struct task_struct *sel)
 {
 	//save the old console content
-	cli();
 	int x,y;
 	getxy(&x,&y);
 	sel->console.x=x;
 	sel->console.y=y;
 	kmemcpy(VIDMEM,sel->console.con,80*25*2);
-	sti();
 	return;
 }
 
 void set_console(struct task_struct *sel)
 {
 	//set new console content
-	cli();
 	gotoxy(sel->console.x,sel->console.y);
 	kmemcpy(sel->console.con,VIDMEM,80*25*2);
-	sti();
 	return;
 }
 

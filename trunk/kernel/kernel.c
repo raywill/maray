@@ -50,17 +50,17 @@ void osmain( void )
 	
 	init_all_tasks();
 
-	init_timer(); /* initialize time, enable timer irq */
-	init_system_clock(&real_tm);
-	kprint( "Timer initialized\n");
-	init_system_clock(&start_tm);
-	kprint("System start time is ");
-	kprint(timetostr(&start_tm, tmbuf));
-
 	init_kb();	/* set keyboard IRQ,and enable it */
 	kprint( "\nKeyboard initialized\n" );
  
-	kprint("Starting first process....\n");
+	init_timer(); /* initialize time, enable timer irq */
+	/* init_system_clock(&real_tm); */
+	kprint( "\nTimer initialized\n");
+	init_system_clock(&start_tm);
+	kprint("\nSystem start time is \n");
+	kprint(timetostr(&start_tm, tmbuf));
+
+	kprint("\nStarting first process....\n");
 	start_first_process();
 
 	kprint( "\nNow I am doing a loop ,waiting for interrupt :)\n" );

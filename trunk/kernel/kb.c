@@ -13,7 +13,7 @@
 #include <i386/vector.h>	/*	setvect()			*/
 #include <libc.h>					/*	inportb()	,outportb()		*/
 #include <i386/timer.h>
-#include <maray/tty.h>
+#include <stdio.h>
 
 #define LED_SRL 1
 #define LED_NUM 2
@@ -71,12 +71,14 @@ static void kb_irq(void)
 	
 	if(i<sizeof(Scan_Tab) )
 	{
-		buf[0]=Disp_Tab[i];
-		buf[1]='\0';
-		kprint(buf);//we'd better implement a putchar();
-		if(buf[0]=='X') enable_timer();
-		if(buf[0]=='R') disable_timer();
-		if(buf[0]=='S') reset_sys();
+		kprintf("%c", Disp_Tab[i]);
+		switch (Disp_Tab[i]) {
+			case 'X': enable_timer();
+				  break;
+			case 'R': disable_timer();
+				  break;
+			case 'S': reset_sys();
+		}
 	}
 	outportb(0x20,0x20);
 }

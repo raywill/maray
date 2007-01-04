@@ -11,6 +11,7 @@
 #include <maray/type.h>
 #include <asmcmd.h>
 #include <i386/vector.h>		/*regs_t*/
+#include <stdio.h>
 
 extern void debug_hlt();
 
@@ -24,11 +25,10 @@ void page_fault_handler(regs_t *regs)
 	else
 	kprint("Page not present!\n");
 	*/
-	kprint("Error Code:");
-	kprint(itoa(regs->err_code,buf,16));
-	kprint("\nAddress:");
-	kprint(itoa(regs->eip,buf,16));
-	/*I really need a printf() :! */
+	kprintf("Error Code:");
+	kprintf("%x", regs->err_code);
+	kprintf("\nAddress:");
+	kprintf("%x\n", regs->eip);
 	debug_hlt();
 	cli();
 

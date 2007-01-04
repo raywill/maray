@@ -10,6 +10,7 @@
 #include <i386/intr.h>
 #include <asmcmd.h>
 #include <maray/type.h>
+#include <stdio.h>
 
 extern void debug_hlt();
 
@@ -41,13 +42,13 @@ void common_interrupt(regs_t *regs)
 /* this handler installed at compile-time
 Keyboard handler is installed at run-time (see below) */
 	case 0x20:	/* timer IRQ 0 */
-		kprint("Timer\n");
+		kprintf("Timer\n");
 /* reset hardware interrupt at 8259 chip */
 		outportb(0x20, 0x20);
 		break;
 	case 14:	/* Page Fault */
-		kprint("\nA Page Fault Occurs!CR2=");
-		kprint( itoa(getCR2(),buf,10) );
+		kprintf("\nA Page Fault Occurs!CR2=");
+		kprintf("%d\n", getCR2());
 /*
 		kprint("\nUSER_ESP=");
 		buf[0]='\0';
@@ -61,15 +62,15 @@ Keyboard handler is installed at run-time (see below) */
 		break;
 	default:
 		clrscr();
-		kprint("\nException occured:");
+		kprintf("\nException occured:");
 		if(regs->which_int <20)
-			kprint(msg[regs->which_int]);
+			kprintf(msg[regs->which_int]);
 		else
-			kprint( itoa(regs->which_int,buf,10) );
+			kprintf("%d\n", regs->which_int );
 		cli();
 		halt();
 		while(1)
-			kprint("In Exception Handle.");
+			kprintf("In Exception Handle.");
 		break;
 	}
 }

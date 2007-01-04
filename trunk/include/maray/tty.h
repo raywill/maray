@@ -5,6 +5,7 @@
 
 
 void init_tty(void);
+void putc(int c);
 void print( const char* str );
 void kprint( const char* str );
 void clrscr(void);

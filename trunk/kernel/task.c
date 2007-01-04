@@ -14,6 +14,7 @@
 #include <libc.h>
 #include <asmcmd.h>
 #include <maray/tty.h>
+#include <stdio.h>
 
 extern void debug_hlt();
 
@@ -150,7 +151,7 @@ void test_task2(void){
 	clrscr();
 	while(1){
 		//clrscr();
-		print("Hello from task 2\n");
+		print("                             Hello from task 2\n");
 		sleep();
 //		debug_halt();
 		//schedule();
@@ -167,7 +168,7 @@ void init_all_tasks()
 	tss.esp0=KERNEL_STACK_OFFSET+0*PAGE_SIZE-1+_PAGE_OFFSET;
 	tss.ss0=__KERNEL_DS;
 	
-	kprint("\nLoading Task Register\n");
+	kprintf("\nLoading Task Register\n");
 //	kprint("Task!init\n");
 	
 	k_ltr();

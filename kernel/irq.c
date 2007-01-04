@@ -9,6 +9,7 @@
 
 #include <i386/irq.h>
 #include <maray/type.h>
+#include <stdio.h>
 
 #ifndef IRQ1_PORT
 	#define IRQ1_PORT 0x21
@@ -38,7 +39,7 @@ route IRQs 0-7 to INTs 20h-27h */
 	outportb(0x21, ~0x00);/*only keyboard for testing*/
 	outportb(0xA1, ~0x00);
 	
-	kprint("8259 init OK!\n");	
+	kprintf("8259 init OK!\n");	
 }
 
 void enable_irq(int irq)

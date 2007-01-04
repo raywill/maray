@@ -1,7 +1,8 @@
 #ifndef __LIBC
 #define __LIBC
 
-int strlen(char *buf);
+int strlen(const char *buf);
+int strnlen(const char *buf, int len);
 char *reverse(char *buf);
 char *itoa(unsigned int i,char *buf,int x );
 char *strcat(char *dest, const char *src);

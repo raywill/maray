@@ -10,13 +10,22 @@
 #include <libc.h>
 #include <asmcmd.h>
 
-int strlen(char *buf)
+int strlen(const char *buf)
 {
 	int i=0;
 	while(*buf++)
 		i++;
 	return i;
 }
+
+int strnlen(const char *buf, int size)
+{
+	int n;
+	for (n = 0; size > 0 && *buf++ != '\0'; size--)
+		n++;
+	return n;
+}
+
 char *reverse(char *buf)
 {
 	char k;

@@ -12,7 +12,7 @@
 #include <i386/irq.h>
 #include <i386/timer.h>
 #include <maray/clock.h>
-#include <maray/tty.h>
+#include <stdio.h>
 #include <asmcmd.h>
 #include <libc.h>
 /*'tick' time elapse*/
@@ -76,10 +76,12 @@ void timer_irq()
 		int oldx,oldy;
 		getxy(&oldx,&oldy);
 		gotoxy(60,23);
-		kprint(itoa(timefly,buf,10));
+		//kprint(itoa(timefly,buf,10));
+		kprintf("%d\n", timefly);
 		//kprint("ok\n");
 		gotoxy(50,21);
-		kprint( timetostr(update_sys_time(timefly),buf) );
+		kprintf("%s\n", timetostr(update_sys_time(timefly), buf));
+		//kprint( timetostr(update_sys_time(timefly),buf) );
 		gotoxy(oldx,oldy);
 	}
 	schedule();

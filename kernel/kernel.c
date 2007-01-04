@@ -15,6 +15,7 @@
 #include <maray/tty.h>
 #include <asmcmd.h>
 #include <maray/clock.h>
+#include <stdio.h>
 
 /*extern void enable_paging(void);*/
 void install_syscall(void);
@@ -37,37 +38,36 @@ void osmain( void )
 	
 	/* ini screen first,so that we can output info as early as possible */
 	init_tty();	/*	initialize the screen*/	
-   	kprint( "TTY initialized\n" );
+   	kprintf( "TTY initialized\n" );
 	
 	init_mm();
-   	kprint( "Memory manager initialized\n" );		  	
+   	kprintf( "Memory manager initialized\n" );		  	
 	
 	init_irq();	/*initialize irq,with all interrupte disabled.*/
-   	kprint( "IRQ initialized\n" );
+   	kprintf( "IRQ initialized\n" );
    
-	kprint("\nHello\n");
+	kprintf("\nHello\n");
 	install_syscall();
 	
 	init_all_tasks();
 
 	init_kb();	/* set keyboard IRQ,and enable it */
-	kprint( "\nKeyboard initialized\n" );
+	kprintf( "\nKeyboard initialized\n" );
  
 	init_timer(); /* initialize time, enable timer irq */
 	/* init_system_clock(&real_tm); */
-	kprint( "\nTimer initialized\n");
+	kprintf( "\nTimer initialized\n");
 	init_system_clock(&start_tm);
-	kprint("\nSystem start time is \n");
-	kprint(timetostr(&start_tm, tmbuf));
+	kprintf("\nSystem start time is \n");
+	kprintf(timetostr(&start_tm, tmbuf));
 
-	kprint("\nStarting first process....\n");
+	kprintf("\nStarting first process....\n");
+	
 	start_first_process();
 
-	kprint( "\nNow I am doing a loop ,waiting for interrupt :)\n" );
+	kprintf( "\nNow I am doing a loop ,waiting for interrupt :)\n" );
 	
 	while(1);
 	halt();
 }
-
-
 

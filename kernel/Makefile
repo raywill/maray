@@ -9,7 +9,8 @@ NASM	=nasm -f aout -i$(INCDIR)
 CC	=gcc -fno-leading-underscore -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -I$(INCDIR)
 LD	=ld -Ttext 0xC0000000 --oformat binary -e kernel_entry -nostdlib
 #LD	=ld -Ttext 0xC0000000 --oformat coff-go32 -e kernel_entry -nostdlib
-OBJS	= kinit.o kernel.o tty.o kb.o timer.o irq.o libc.o intr.o clock.o func.o memory.o pagefault.o task.o syscall.o
+OBJS	= kinit.o kernel.o tty.o kb.o timer.o irq.o libc.o intr.o clock.o func.o memory.o pagefault.o task.o syscall.o \
+	  kprintf.o
 
 # targets
 all: kernel.bin
@@ -42,6 +43,7 @@ memory.o: memory.c
 task.o: task.c
 pagefault.o: pagefault.c
 syscall.o: syscall.c
+kprint.o: kprintf.c
 # explicit rules
 #$(LIBC):
 #	make -C ../lib -f $(MAKEFILE)

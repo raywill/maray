@@ -18,6 +18,7 @@
 
 #include <i386/memory.h>
 #include <global.h>
+#include <stdio.h>
 
 #define NR_HOLES 1024
 //#define NR_HOLES 20		//For testing
@@ -147,7 +148,7 @@ void kfree(void *free_ptr,unsigned int size)
 	// Insert this free block to the free memory list . Need to obtain a free hole from the free_hole_list
 	new = get_free_hole();	// Get a free hole
 	if(new == NULL ){
-		kprint("Not enough free memory holes!");
+		kprintf("Not enough free memory holes!");
 		//panic();
 	}
 	// fill the hole with returned space info
@@ -208,7 +209,7 @@ struct hole * get_free_hole()
 {
 	struct hole *fhole;
 	if(!free_hole_list){
-		kprint("No free slots!");
+		kprintf("No free slots!");
 		//	panic();
 		//	return;
 	}

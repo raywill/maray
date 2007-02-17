@@ -32,7 +32,7 @@
 [extern tss]
 
 	%define _PAGE_OFFSET 	0xC0000000		;3G
-	%define LOAD_BASE			0x90000				;phy_addr where we load our kernel to
+	%define LOAD_BASE			0x100000				;phy_addr where we load our kernel to
 	%define V_P_OFFSET (_PAGE_OFFSET-LOAD_BASE)
 	%define IMAGE_SIZE 0x7D000	;=500K ,the total size of our kernel
 	%define START_ADDR 0x0000
@@ -40,6 +40,29 @@
 
 
 kernel_entry:
+        jmp start
+
+ALIGN 4
+
+mboot:
+        MULTIBOOT_PAGE_ALIGN equ 1<<0
+        MULTIBOOT_MEMORY_INFO equ 1<<1
+        MULTIBOOT_AOUT_KLUDGE equ 1<<16
+        MULTIBOOT_HEADER_MAGIC equ 0x1badb002
+        MULTIBOOT_HEADER_FLAGS equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE
+        MULTIBOOT_CHECKSUM equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+        
+        extern code, bss, ends
+
+        dd MULTIBOOT_HEADER_MAGIC
+        dd MULTIBOOT_HEADER_FLAGS
+        dd MULTIBOOT_CHECKSUM
+
+        dd mboot - _PAGE_OFFSET + 0x100000
+        dd code
+        dd bss
+        dd ends
+        dd start - _PAGE_OFFSET + 0x100000
 
 start:
 	cli

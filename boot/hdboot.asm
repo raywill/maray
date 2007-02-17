@@ -1,7 +1,10 @@
 ; myboot.asm   bootstrap for real mode loader
 ;Aug,01,2005
 
-%define IMAGE_SEG	0x9000
+; NOTE: the hd loader is BROKEN
+;       using GRUB instead now
+
+%define IMAGE_SEG	0x10000
 %define TOTAL_SECTOR	90
 %if IMAGE_SEG & 31
   %error "IMAGE_SEG must be divisible by 0x20"

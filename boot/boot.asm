@@ -1,10 +1,19 @@
 ; myboot.asm   bootstrap for real mode loader
 ;Aug,01,2005
 
+; move image to 0x90000 first
+; then move it to 0x100000 after init for PM
+; make consistent for hdboot
+; Feb,17,2007
+
 %define IMAGE_SEG	0x9000
 %if IMAGE_SEG & 31
   %error "IMAGE_SEG must be divisible by 0x20"
 %endif
+
+%define LOAD_BASE 0x100000
+%define IMAGE_SIZE 51200
+
 [org	0x7C00]
 [bits 16]
 entry:
@@ -64,10 +73,18 @@ set_PM_bit:
 [bits 32]
 mode_32:
 	mov	ax,gdt_data_addr
-	mov	ds,ax							;set data segment base at 0x90000
-	jmp dword gdt_code_addr:0x90000	;0x10=10 000 b ,now CS was pointing to gdt[2]
+	mov	ds,ax	;set data segment base at 0x90000
+; ds:esi -> es:edi
+        mov     es, ax
+move_mem:
+        mov     esi, IMAGE_SEG << 4
+        mov     edi, LOAD_BASE
+        mov     ecx, IMAGE_SIZE >> 2
+        cld
+        rep movsd        
+
+	jmp dword gdt_code_addr:LOAD_BASE ;0x10=10 000 b ,now CS was pointing to gdt[2]
 	
-;	jmp	IMAGE_SEG:0		;jump to 0x9000
 ;===================================================================
 [bits 16]
 error:
@@ -132,7 +149,7 @@ rp_read:
         jc      error
 
         inc     di
-        cmp     di, 90  ; how many sectors wanna read
+        cmp     di, IMAGE_SIZE >> 9  ; how many sectors wanna read
         je      read_done
         add     bx, 512 ; 512B per sector
         inc     cl

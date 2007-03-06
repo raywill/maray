@@ -1,0 +1,12 @@
+First you need djgpp (gcc Windows version) to compile .
+
+Excute make && make install in kernel/.
+g.bat invokes Makefile for you and generate NEW.bin ,which is the kernel image.
+
+Use VMWare or Bochs to run New.bin , as floopy image.
+
+
+
+===================
+raywill
+hustos@163.com

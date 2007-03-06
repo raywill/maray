@@ -18,11 +18,11 @@ hdirq(void)
 	outportb(pciide_bar, 0x0); /* reset Start/Stop bit */
 
 	status = inportb(pciide_bar + 0x02);
-	if (status & 0x02 != 0)
+	if ((status & 0x02) != 0)
 		kprintf("error: controller status\n");
 
 	status = inportb(0x1f7);
-	if (status & 0x01 != 0)
+	if ((status & 0x01) != 0)
 		kprintf("error: device status\n");
 
 	outportb(0xA0, 0x20);
@@ -64,7 +64,7 @@ ata_identify_device(void)
 	insl(0x1f0, info, 128);
 
 	kprintf("\nidentify device\n");
-	if (info[0] & 0x8000 == 0) {
+	if ((info[0] & 0x8000) == 0) {
 		kprintf("no ata0-0\n");
 		return;
 	} else
@@ -112,7 +112,7 @@ ata_set_feature(void)
 	outportb(0x1f7, 0xef);
 	waitdisk();
 	error = inportb(0x1f2);
-	if (error & 0x04 != 0)
+	if ((error & 0x04) != 0)
 		kprintf("set feature error\n");
 	else
 		kprintf("set feature Multiword DMA2 done\n");
@@ -164,7 +164,7 @@ ata_readdma_test()
 
 	error = inportb(0x1f7);
 	kprintf("status = %02x\n", error);
-	if (error & 0x1 != 0)
+	if ((error & 0x1) != 0)
 		kprintf("read sectors error\n");
 	else {
 		kprintf("read sectors ok\n");

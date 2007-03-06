@@ -11,6 +11,7 @@
 #include <i386/task.h>
 #include <i386/irq.h>
 #include <i386/memory.h>
+#include <i386/pci.h>
 #include <maray/kb.h>
 #include <maray/tty.h>
 #include <asmcmd.h>
@@ -54,12 +55,16 @@ void osmain( void )
 	init_kb();	/* set keyboard IRQ,and enable it */
 	kprintf( "\nKeyboard initialized\n" );
  
-	init_timer(); /* initialize time, enable timer irq */
+	//init_timer(); /* initialize time, enable timer irq */
 	/* init_system_clock(&real_tm); */
 	kprintf( "\nTimer initialized\n");
 	init_system_clock(&start_tm);
 	kprintf("\nSystem start time is \n");
 	kprintf(timetostr(&start_tm, tmbuf));
+
+	kprintf("\nstart scanning pci devices\n");
+	scan_pci_device();
+	halt();
 
 	kprintf("\nStarting first process....\n");
 	

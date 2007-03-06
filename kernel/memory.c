@@ -10,7 +10,8 @@
 /*
 *Phy Memory Layout:
 * 0x00000 - 0x19000(100k) 		------Kernel(.text,initial data struct)
-* 0x19000 - 0x20000(128k) 		------Reserved for kernel
+* 0x19000 - 0x1A000(104k) 4k for bus master DMA
+* 0x1A000 - 0x20000(128k) 		------Reserved for kernel
 * 0x20000 - 0x*****(unlimited)	 ------User space
 * We share a same page table currently.
 **/
@@ -21,6 +22,7 @@
 #include <stdio.h>
 
 #define NR_HOLES 1024
+#define BASE_ADDR 0xC001A000
 //#define NR_HOLES 20		//For testing
 
 
@@ -69,7 +71,7 @@ void init_hole(struct hole *holes)
 	holes[0].h_prev = holes[0].h_next = &holes[0];
 
 	holes[0].size=0xA00000; 	//	=10M
-	holes[0].base=0xC0019000;	// Assume we totally have 10M phy memory :-) Just for experimental  purpose	
+	holes[0].base=BASE_ADDR;	// Assume we totally have 10M phy memory :-) Just for experimental  purpose	
 								// 19000 = 100K ,reserved for the .text seg of kernel itself
 								// this 100k will never be freed
 	hole_head=&holes[0];

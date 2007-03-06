@@ -81,22 +81,60 @@ char	* strcat	(char *dest, const char *src)
 //////////////////////////////////////////
 /*   			Do_IO													*/
 //////////////////////////////////////////
-void outportb(unsigned port, unsigned val)
+void 
+outportb(int port, unsigned char val)
 {
 	__asm__ __volatile__("outb %b0,%w1"
 		:
 		: "a"(val), "d"(port));
 }
-unsigned inportb(unsigned short port)
+unsigned char
+inportb(int port)
 {
 	unsigned char ret_val;
 
-	__asm__ __volatile__("inb %1,%0"
+	__asm__ __volatile__("inb %w1,%0"
 		: "=a"(ret_val)
 		: "d"(port));
 	return ret_val;
 }
 
+void
+outportw(int port, unsigned short val)
+{
+    __asm__ __volatile("outw %0, %w1" : : "a" (val), "d" (port));
+}
+
+void
+outportl(int port, unsigned long val)
+{
+    __asm__ __volatile("outl %0, %w1" : : "a" (val), "d" (port));
+}
+
+unsigned short
+inportw(int port)
+{
+    unsigned short ret_val;
+    __asm __volatile("inw %w1, %0" : "=a" (ret_val) : "d" (port));
+    return ret_val;
+}
+
+unsigned long
+inportl(int port)
+{
+    unsigned long ret_val;
+    __asm __volatile("inl %w1, %0" : "=a" (ret_val) : "d" (port));
+    return ret_val;
+}
+
+void
+insl(int port, void *ptr, int cnt)
+{
+	__asm__ __volatile__("cld\n\trepne\n\tinsl"
+			     : "=D" (ptr), "=c" (cnt)
+			     : "d" (port), "0" (ptr), "1" (cnt)
+			     : "memory", "cc");
+}
 
 void kmemcpy(const void *scr, void *dest,unsigned long size)
 {

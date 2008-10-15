@@ -40,6 +40,7 @@ void osmain( void )
 	init_tty();	/*	initialize the screen*/	
    	kprintf( "TTY initialized\n" );
 	
+	/* init both physical and virtual memory */
 	init_mm();
    	kprintf( "Memory manager initialized\n" );		  	
 	

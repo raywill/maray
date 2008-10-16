@@ -1,3 +1,14 @@
+Can use harddisk bootstrap or floppy bootstrap.
+GRUB supported.
+
+===================
+raywill
+2008-10-16
+hustos@163.com
+
+
+
+
 First you need djgpp (gcc Windows version) to compile .
 
 Excute make && make install in kernel/.
@@ -5,8 +16,7 @@ g.bat invokes Makefile for you and generate NEW.bin ,which is the kernel image.
 
 Use VMWare or Bochs to run New.bin , as floopy image.
 
-
-
 ===================
 raywill
+2007-5-16
 hustos@163.com

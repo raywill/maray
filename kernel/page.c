@@ -12,20 +12,10 @@
 
 #include <i386/types.h>
 #include <i386/memory.h>
+	
 
-typedef struct{ long a; }PDE;
-typedef struct{ long a; }PTE;
-
-
-typedef struct __page_list{
-	int	isfree;
-	PAGE *page;
-	struct __page_list *next;
-}PAGE_LIST;
-		
 #define NULL_PAGE_LIST	(PAGE_LIST *)0;
 #define NULL_PAGE	(PAGE *)0;
-
 
 
 const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
@@ -36,6 +26,12 @@ const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
  */
 const uint32_t res_page_count = 2*1024; /* reserve low 8M memory */
 const uint32_t res_kernel_page_count = 1*1024;	/* reserve 4M for kernel */
+/* reserve 4M~8M area for page table. */
+
+/* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
+const uint32_t page_base = res_page_count << 12; /* grow up from 8M memory */
+const uint32_t page_pool_size = 32; /* NOTE: 32 pages, not in bytes */
+
 
 /* convert between virtual address and physical address */
 uint32_t _v2p(uint32_t vaddr)
@@ -106,7 +102,7 @@ page_t* alloc_page()
 	// put your code here
 	
 	/**/
-	for (i = res_page_count; i < max_page_count; i++)
+	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
 		pg = (page_t*)(page_base + i<<4);
 		if (0 == pg->ref_count)
@@ -130,7 +126,7 @@ void init_all_pages()
 	 */
 
 	/* Initialize reserved pages */
-	for (i = 0; i < res_page_count; i++)
+	for (i = 0; i < res_page_count + page_pool_size ; i++)
 	{
 		pg = (page_t*)(page_base + i<<4);
 		pg->ref_count = 1;
@@ -138,7 +134,7 @@ void init_all_pages()
 		pg->virtual = PAGE_OFFSET + i << PAGE_SHIFT;
 	}
 	/* initialize free pages */
-	for (i = res_page_count; i < max_page_count; i++)
+	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
 		pg = (page_t*)(page_base + i<<4);
 		pg->ref_count = 0;

@@ -31,8 +31,9 @@
 [extern last]
 [extern tss]
 
-	%define _PAGE_OFFSET 	0xC0000000		;3G
-	%define LOAD_BASE			0x100000				;phy_addr where we load our kernel to
+	%define _PAGE_OFFSET 	0xC0000000	;3G
+	%define PAGE_SIZE 	0x1000		;4K
+	%define LOAD_BASE	0x100000	;phy_addr where we load our kernel to
 	%define V_P_OFFSET (_PAGE_OFFSET-LOAD_BASE)
 	%define IMAGE_SIZE 0x7D000	;=500K ,the total size of our kernel
 	%define START_ADDR 0x0000
@@ -103,7 +104,7 @@ fill_page_directory:
 	mov	eax,0
 
 fill_zero_page:		;fill all page directory entries as NULL
-	mov	[edi],eax
+	mov [edi],eax
 	add edi,4
 	dec ecx
 	cmp ecx,0
@@ -112,12 +113,11 @@ fill_zero_page:		;fill all page directory entries as NULL
 ;At first I didnt do this and kernel crash again and again.
 ;Thanks to the fellows in Mega-tokyo (Now in OSDev)
 identity_map_kernel:
-	mov	dword [page_directory-_PAGE_OFFSET+(START_ADDR>>22)*4],temp_kernel_page_table-_PAGE_OFFSET+7	;seccond param is compile time determined
-
+	mov dword [page_directory-_PAGE_OFFSET+(START_ADDR>>22)*4],temp_kernel_page_table-_PAGE_OFFSET+7	;seccond param is compile time determined
 	mov eax,7
 	mov ebx,0
 fill_temp_page_table:	
-	mov	dword [temp_kernel_page_table-_PAGE_OFFSET+ebx*4],	eax
+	mov dword [temp_kernel_page_table-_PAGE_OFFSET+ebx*4],eax
 	add eax,0x1000
 	inc ebx
 	cmp ebx,1023
@@ -125,20 +125,22 @@ fill_temp_page_table:
 
 
 fill_presented_page:
-	mov	dword [page_directory-_PAGE_OFFSET+(_PAGE_OFFSET>>22)*4],kernel_page_table-_PAGE_OFFSET+7	;seccond param is compile time determined
-
+	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+0)*4],kernel_page_table+PAGE_SIZE*0-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+1)*4],kernel_page_table+PAGE_SIZE*1-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+2)*4],kernel_page_table+PAGE_SIZE*2-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+3)*4],kernel_page_table+PAGE_SIZE*3-_PAGE_OFFSET+7
 	;mov eax,90007
 	mov eax,7
 	mov ebx,0
 fill_page_table:	
-	mov	dword [kernel_page_table-_PAGE_OFFSET+ebx*4],	eax
+	mov dword [kernel_page_table-_PAGE_OFFSET+ebx*4],eax
 	add eax,0x1000
 	inc ebx
-	cmp ebx,1023
+	cmp ebx,1024*4
 	jnz fill_page_table
 	
 	mov eax,page_directory-_PAGE_OFFSET
-	mov	cr3,eax
+	mov cr3,eax
 
 ;Doing nothing here
 ;	hlt
@@ -601,11 +603,14 @@ GLOBAL  page_directory
 	 page_directory:
 		times	0x1000 db 0
 	
+; map 16M bytes kernel space
+; should be enough
 align 0x1000
 GLOBAL  kernel_page_table	
 	 kernel_page_table:
-		times	0x1000 db 0
-		
+		times	0x4000 db 0
+
+
 ;this is used for indentity-mapping the kernel
 align 0x1000
 GLOBAL  temp_kernel_page_table	

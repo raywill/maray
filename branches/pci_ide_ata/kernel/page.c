@@ -3,19 +3,17 @@
 	Copyright: GPL
 	Author: Raywill
 	Date: 22-12-06
-	Description: ????
+	Description: 
 */
 
-
-
-/*		思考方式：我们只有一个进程！他拥有整个内存空间		*/
-
+#include <global.h>
 #include <i386/types.h>
 #include <i386/memory.h>
-	
+#include <i386/page.h>
 
 #define NULL_PAGE_LIST	(PAGE_LIST *)0;
 #define NULL_PAGE	(PAGE *)0;
+#define PAGE_STRUCT_SIZE (sizeof(page_t))
 
 
 const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
@@ -29,8 +27,8 @@ const uint32_t res_kernel_page_count = 1*1024;	/* reserve 4M for kernel */
 /* reserve 4M~8M area for page table. */
 
 /* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
-const uint32_t page_base = res_page_count << 12; /* grow up from 8M memory */
-const uint32_t page_pool_size = 32; /* NOTE: 32 pages, not in bytes */
+uint32_t page_base = /* res_page_count */ (2*1024)<< 12; /* grow up from 8M memory */
+uint32_t page_pool_size = (/*max_page_count*/ 32*1025*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
 
 
 /* convert between virtual address and physical address */
@@ -69,6 +67,7 @@ void unset_pt(uint32_t* pt_base, uint32_t index)
 }
 
 /* incomplete!!! */
+#if 0
 void* alloc_zeroed_page()
 {
 	page_t* pg = NULL;
@@ -87,6 +86,7 @@ void* alloc_zeroed_page()
 	memset(vaddr,0, PAGE_SIZE);
 	return vaddr;
 }
+#endif
 
 /* Allocate a free page.
  *
@@ -96,6 +96,7 @@ void* alloc_zeroed_page()
  */
 page_t* alloc_page()
 {
+	int i=0;
 	page_t* pg = NULL;
 	
 	/* search in the page pool and find a free page */
@@ -104,7 +105,7 @@ page_t* alloc_page()
 	/**/
 	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
-		pg = (page_t*)(page_base + i<<4);
+		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
 		if (0 == pg->ref_count)
 		{
 			break;	/* got a free page */
@@ -119,6 +120,8 @@ page_t* alloc_page()
 void init_all_pages()
 {
 	int i;
+	page_t* pg = NULL;
+
 	/* All pages are initialized here
 	 * However, they won't function until
 	 * the address of real pages is filled 
@@ -128,15 +131,15 @@ void init_all_pages()
 	/* Initialize reserved pages */
 	for (i = 0; i < res_page_count + page_pool_size ; i++)
 	{
-		pg = (page_t*)(page_base + i<<4);
+		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
 		pg->ref_count = 1;
 		pg->index = i;
-		pg->virtual = PAGE_OFFSET + i << PAGE_SHIFT;
+		pg->virtual = PAGE_OFFSET + i << PAGE_SHIFT ;
 	}
 	/* initialize free pages */
 	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
-		pg = (page_t*)(page_base + i<<4);
+		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
 		pg->ref_count = 0;
 		pg->index = i;
 		pg->virtual = 0;
@@ -155,45 +158,47 @@ void init_page_tables()
 	uint32_t* p = NULL;
 
 	int i = 0, j = 0, k = 0;
-	int dir_cnt = 0;
+	int dir_cnt = 0; /* directory entrys needs to be set */
 	int index = 0;	/* ptd array index */
-	
-	
+
+
 	ptd = start;
 	pte = start + PAGE_SIZE;
-	
-	/* fill ptd */
-	memset(ptd,0,PAGE_SIZE);
-
-	dir_cnt = res_page_count >> 10;	/* assume that res_page_count mod 1K==0 */
-	index = (uint32_t)PAGE_OFFSET>>22;
-
-	for (i = 0; i < dir_cnt ; i++)
-	{	
-		p = (uint32_t*)(ptd + index*4);
-		*p = pte & (~0xFFF)  | 0x07;
-		index++;
-		pte += PAGE_SIZE;
-
-		/*
-		set_pd((uint32_t*)ptd, index, pte);
-		index++;
-		pte += PAGE_SIZE;
-		*/
-	}
 
 	
 	/* fill pte */
-	pte = start + PAGE_SIZE;
-	for (i = 0; i < res_page_count; i++)
+	memset(pte, 0, ((res_page_count + page_pool_size + 1023)%1024) * PAGE_SIZE);
+	for (i = 0; i < res_page_count + page_pool_size; i++)
 	{
 		p = (uint32_t*)(pte + i * 4);
-		*p = (i << PAGE_SHIFT) | 0x07;
+		*p = (i << PAGE_SHIFT) | 0x07;	/* write *physical* address* to pte. */
 
 		/*
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
 		 */
 	}
+
+	/* fill ptd */
+	memset(ptd,0,PAGE_SIZE);
+
+	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
+	index = (uint32_t)PAGE_OFFSET>>22;
+
+	for (i = 0; i < dir_cnt ; i++)
+	{	
+		p = (uint32_t*)(ptd + index * 4);
+		*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
+		index++;
+		pte += PAGE_SIZE;
+
+		/*
+		set_pd((uint32_t*)ptd, index, pte-PAGE_OFFSET);
+		index++;
+		pte += PAGE_SIZE;
+		*/
+	}
+
+
 
 	/* Conclution:
 	 *   'start' tell us where our initial page table locates.

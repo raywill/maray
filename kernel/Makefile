@@ -10,7 +10,7 @@ CC	=gcc -fno-leading-underscore -ffreestanding -nostdlib -nostartfiles -nodefaul
 #LD	=ld -Ttext 0xC0000000 --oformat binary -e kernel_entry -nostdlib
 #LD	=ld -Ttext 0xC0000000 --oformat coff-go32 -e kernel_entry -nostdlib
 LD	=ld -Ttext 0xc0000000 -T $(LDSCRIPT)
-OBJS	= kinit.o kernel.o tty.o kb.o timer.o irq.o libc.o intr.o clock.o func.o memory.o pagefault.o task.o syscall.o \
+OBJS	= kinit.o kernel.o tty.o kb.o timer.o irq.o libc.o intr.o clock.o func.o memory.o pagefault.o page.o task.o syscall.o \
 	  kprintf.o pci.o pciide.o ata.o
 
 # targets
@@ -20,7 +20,8 @@ install:
 	copy /b ..\boot\boot.bin+kernel.bin ..\new.bin
 
 clean:
-	del	 *.o
+#	del	 *.o
+	rm	*.o -fr
 
 # implicit rules
 .asm.o:

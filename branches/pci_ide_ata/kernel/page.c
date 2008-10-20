@@ -7,6 +7,9 @@
 */
 
 #include <global.h>
+#include <libc.h>
+#include <stdio.h>
+
 #include <i386/types.h>
 #include <i386/memory.h>
 #include <i386/page.h>
@@ -14,6 +17,9 @@
 #define NULL_PAGE_LIST	(PAGE_LIST *)0;
 #define NULL_PAGE	(PAGE *)0;
 #define PAGE_STRUCT_SIZE (sizeof(page_t))
+
+/* extern in asm */
+int set_page_directory(uint32_t pte);
 
 
 const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
@@ -28,7 +34,7 @@ const uint32_t res_kernel_page_count = 1*1024;	/* reserve 4M for kernel */
 
 /* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
 uint32_t page_base = /* res_page_count */ (2*1024)<< 12; /* grow up from 8M memory */
-uint32_t page_pool_size = (/*max_page_count*/ 32*1025*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
+uint32_t page_pool_size = (/*max_page_count*/ 32*1024*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
 
 
 /* convert between virtual address and physical address */
@@ -65,6 +71,20 @@ void unset_pt(uint32_t* pt_base, uint32_t index)
 {
 	pt_base[index] = 0;
 }
+
+
+/* after new page framework has been setup
+ * we will update paging using this function
+ */
+void update_paging()
+{
+
+	uint32_t pte = res_kernel_page_count << PAGE_SHIFT;
+//	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
+
+}
+
+
 
 /* incomplete!!! */
 #if 0
@@ -105,7 +125,7 @@ page_t* alloc_page()
 	/**/
 	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
-		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
+		pg = (page_t*)(_p2v(page_base) + i*PAGE_STRUCT_SIZE);
 		if (0 == pg->ref_count)
 		{
 			break;	/* got a free page */
@@ -127,19 +147,23 @@ void init_all_pages()
 	 * the address of real pages is filled 
 	 * in page table entrys
 	 */
-
+	
+	kprintf("init_all_pages()->\n");
+	kprintf("\tinit reserved pages\n");
 	/* Initialize reserved pages */
 	for (i = 0; i < res_page_count + page_pool_size ; i++)
 	{
-		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
+		pg = (page_t*)(_p2v(page_base) + i*PAGE_STRUCT_SIZE);
 		pg->ref_count = 1;
 		pg->index = i;
 		pg->virtual = PAGE_OFFSET + i << PAGE_SHIFT ;
 	}
+
+	kprintf("\tinit free pages\n");
 	/* initialize free pages */
 	for (i = res_page_count + page_pool_size; i < max_page_count; i++)
 	{
-		pg = (page_t*)(page_base + i*PAGE_STRUCT_SIZE);
+		pg = (page_t*)(_p2v(page_base) + i*PAGE_STRUCT_SIZE);
 		pg->ref_count = 0;
 		pg->index = i;
 		pg->virtual = 0;
@@ -152,7 +176,7 @@ void init_all_pages()
  */
 void init_page_tables()
 {
-	uint32_t start = PAGE_OFFSET + res_kernel_page_count << PAGE_SHIFT;
+	uint32_t start = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
 	uint32_t pte;	/* page entry */
 	uint32_t ptd;  /* page directory */
 	uint32_t* p = NULL;
@@ -165,21 +189,38 @@ void init_page_tables()
 	ptd = start;
 	pte = start + PAGE_SIZE;
 
-	
+	kprintf("init_page_tables()->\n");
+
+	kprintf("\tfill pte\n");
 	/* fill pte */
-	memset(pte, 0, ((res_page_count + page_pool_size + 1023)%1024) * PAGE_SIZE);
+	kprintf("pte=%x\n",pte);
+	memset((void*)pte, 0, ((res_page_count + page_pool_size + 1023)%1024) * PAGE_SIZE);
+
 	for (i = 0; i < res_page_count + page_pool_size; i++)
 	{
 		p = (uint32_t*)(pte + i * 4);
 		*p = (i << PAGE_SHIFT) | 0x07;	/* write *physical* address* to pte. */
-
+		if(i%200==0)
+		{
+			kprintf("[%x]=%x\t",p,*p);
+		}
 		/*
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
 		 */
 	}
+	
+	kprintf("\n");
 
+	kprintf("last pte[%d]=%x\n",i,*p);
+	kprintf("next pte[%d]=%x(should be empty)\n",++i,*(++p));
+
+
+
+	kprintf("\tfill ptd\n");
 	/* fill ptd */
-	memset(ptd,0,PAGE_SIZE);
+	memset((void*)ptd,0,PAGE_SIZE);
+	
+	kprintf("ptd=%x\n",ptd);
 
 	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
 	index = (uint32_t)PAGE_OFFSET>>22;
@@ -188,9 +229,10 @@ void init_page_tables()
 	{	
 		p = (uint32_t*)(ptd + index * 4);
 		*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
+		kprintf("ptd[%d](%x)=0x%x\n",index,p,*p);
 		index++;
 		pte += PAGE_SIZE;
-
+		
 		/*
 		set_pd((uint32_t*)ptd, index, pte-PAGE_OFFSET);
 		index++;
@@ -198,7 +240,7 @@ void init_page_tables()
 		*/
 	}
 
-
+	kprintf("end of init\n");
 
 	/* Conclution:
 	 *   'start' tell us where our initial page table locates.

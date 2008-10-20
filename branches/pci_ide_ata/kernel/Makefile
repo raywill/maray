@@ -22,7 +22,7 @@ install:
 clean:
 #	del	 *.o
 	rm	*.o -fr
-
+	rm	kernel.bin
 # implicit rules
 .asm.o:
 	$(NASM) -o$@ $<

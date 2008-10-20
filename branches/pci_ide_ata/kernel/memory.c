@@ -20,6 +20,7 @@
 #include <i386/memory.h>
 #include <global.h>
 #include <stdio.h>
+#include <i386/page.h>
 
 #define NR_HOLES 1024
 #define BASE_ADDR 0xC001A000
@@ -52,7 +53,9 @@ static struct hole *get_free_hole();
 void init_mm()
 {
 	init_hole(holes);
-
+	init_all_pages();
+	init_page_tables();
+	update_paging();
 }
 
 void init_hole(struct hole *holes)

@@ -22,6 +22,7 @@ void set_pd(uint32_t* pd_base, uint32_t index, uint32_t val);
 void set_pt(uint32_t* pt_base, uint32_t index, uint32_t val);
 void unset_pd(uint32_t* pd_base, uint32_t index);
 void unset_pt(uint32_t* pt_base, uint32_t index);
+void update_paging();
 
 page_t* alloc_page();
 void init_all_pages();

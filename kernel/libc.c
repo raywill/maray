@@ -144,6 +144,15 @@ void kmemcpy(const void *scr, void *dest,unsigned long size)
 	while(size--)
 		*d++=*s++;
 }
+
+void memset(void *dest,char c, unsigned long size)
+{
+	char *d = dest;
+	if(size<0) return;
+	while(size--)
+		*d++=c;
+}
+
 void kmemset(void *dest,unsigned long size,char c)
 {
 	char *d = dest;

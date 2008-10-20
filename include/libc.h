@@ -10,6 +10,7 @@ char *strcpy(char *dest, const char *src);
 
 void kmemcpy(const void *scr,void *dest,unsigned long size);
 void kmemset(void *dest,unsigned long size,char c);
+void memset(void *dest,char c,unsigned long size);
 /* do I/O read and write */
 void outportb(int port, unsigned char val);
 void outportw(int port, unsigned short val);

@@ -20,7 +20,7 @@
 [global  setvect]
 [global soft_int]
 [global start_first_process]
-
+[global set_page_directory]
 
 [extern set_console]
 [extern save_console]
@@ -594,6 +594,24 @@ no_timer_isr:
 	pop ebp
 	ret
 
+
+; after the memory management framework is setup
+; we will reset page directory using this function
+;
+; prototype:
+; void set_page_directory(uint32_t addr);
+; @addr - MUST be physical address of the directory.
+;
+set_page_directory:
+	push ebp
+	mov ebp,esp
+
+	mov eax,[ebp + 8]	; first parameter, dir address
+	mov cr3,eax
+	mov eax,cr3
+	mov cr3,eax
+	pop ebp
+	ret
 
 
 

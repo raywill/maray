@@ -47,8 +47,13 @@ Keyboard handler is installed at run-time (see below) */
 		outportb(0x20, 0x20);
 		break;
 	case 14:	/* Page Fault */
-		kprintf("\nA Page Fault Occurs!CR2=");
-		kprintf("%d\n", getCR2());
+		
+		kprintf("Error Code:");
+		kprintf("%x", regs->err_code);
+		kprintf("\nAddress:");
+		kprintf("%x\n", regs->eip);
+		kprintf("\nDetails: A Page Fault Occurs! CR2=");
+		kprintf("%x\n", getCR2());
 /*
 		kprint("\nUSER_ESP=");
 		buf[0]='\0';

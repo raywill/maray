@@ -7,9 +7,9 @@ INCDIR	=../include
 LDSCRIPT=./ldscript.ld
 NASM	=nasm -f elf -i$(INCDIR)
 CC	=gcc -fno-leading-underscore -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -I$(INCDIR)
-#LD	=ld -Ttext 0xC0000000 --oformat binary -e kernel_entry -nostdlib
-#LD	=ld -Ttext 0xC0000000 --oformat coff-go32 -e kernel_entry -nostdlib
-LD	=ld -Ttext 0xc0000000 -T $(LDSCRIPT)
+LD	=ld -Ttext 0xC0000000 --oformat elf32-i386 -e kernel_entry -nostdlib -T$(LDSCRIPT)
+#LD	=ld -Ttext 0xC0000000 --oformat coff-go32 -e kernel_entry -nostdlib -T$(LDSCRIPT)
+#LD	=ld -Ttext 0xc0000000 -T $(LDSCRIPT)
 OBJS	= kinit.o kernel.o tty.o kb.o timer.o irq.o libc.o intr.o clock.o func.o memory.o pagefault.o page.o task.o syscall.o \
 	  kprintf.o pci.o pciide.o ata.o
 
@@ -56,6 +56,6 @@ ata.o: ata.c
 
 kernel.bin: $(OBJS) $(MAKEDEP)
 	$(LD) -o$@ $(OBJS) -M >ld.map
-#	objdump --source $@ >krnl.lst
+	objdump --source $@ >krnl.lst
 #	nm --line-numbers $@ | sort >krnl.sym
 #	strip $@

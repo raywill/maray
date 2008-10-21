@@ -47,10 +47,7 @@ void osmain( void )
 	init_irq();	/*initialize irq,with all interrupte disabled.*/
    	kprintf( "IRQ initialized\n" );
 
-     	halt();
-
-
-	kprintf("\nHello\n");
+	kprintf("\nHello from syscall\n");
 	install_syscall();
 	
 	init_all_tasks();

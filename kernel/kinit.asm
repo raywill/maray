@@ -16,11 +16,16 @@
 ;first we load kernel image to 0x90000,then we move it to 0x0000
 ;Move Kernel to 0x0000 , Set Correct segment ,Enable Paging ,Set IDT ,Jump to Main.
 
+; global function
 [global kernel_entry]
 [global  setvect]
 [global soft_int]
 [global start_first_process]
 [global set_page_directory]
+
+; global variable
+[global kernel_page_table]
+[global page_directory]
 
 [extern set_console]
 [extern save_console]
@@ -113,7 +118,7 @@ fill_zero_page:		;fill all page directory entries as NULL
 ;At first I didnt do this and kernel crash again and again.
 ;Thanks to the fellows in Mega-tokyo (Now in OSDev)
 identity_map_kernel:
-	mov dword [page_directory-_PAGE_OFFSET+(START_ADDR>>22)*4],temp_kernel_page_table-_PAGE_OFFSET+7	;seccond param is compile time determined
+	mov dword [page_directory-_PAGE_OFFSET+(START_ADDR>>22)*4],temp_kernel_page_table-_PAGE_OFFSET+7
 	mov eax,7
 	mov ebx,0
 fill_temp_page_table:	
@@ -142,6 +147,8 @@ fill_page_table:
 	mov eax,page_directory-_PAGE_OFFSET
 	mov cr3,eax
 
+	mov eax,cr3	;invalidate TLB
+	mov cr3,eax
 ;Doing nothing here
 ;	hlt
 ;	nop
@@ -156,6 +163,7 @@ flush_page0:
 	jmp gdt_code_addr:flush_page
 ;ret can also flush the pre-frech queue :)
 flush_page:
+
 reset_data_seg:
 	mov	ax,gdt_data_addr		;data segment descriptor
 	mov	ds,ax
@@ -604,12 +612,119 @@ no_timer_isr:
 ;
 set_page_directory:
 	push ebp
+	push ebx
 	mov ebp,esp
 
-	mov eax,[ebp + 8]	; first parameter, dir address
+;	mov ebx,[ebp + 8]	; first parameter, dir address
+
+;	mov eax,cr0	;disable paging
+;	and eax,0x7fffffff
+;	mov cr0,eax
+
+	mov eax,0x400000	;setup new directory
 	mov cr3,eax
-	mov eax,cr3
+
+	mov eax,cr3	;invalidate TLB
 	mov cr3,eax
+
+	mov eax,cr0	;enable paging
+	or eax,0x80000000
+	mov cr0,eax
+
+	mov eax,cr3	;invalidate TLB
+	mov cr3,eax
+	
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	xor eax,eax
+	nop
+	nop
+	nop
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+	nop
+	nop	
+
+
+	jmp gdt_code_addr:flush_page_3
+;ret can also flush the pre-frech queue :)
+flush_page_3:
+
+	pop ebx
 	pop ebp
 	ret
 

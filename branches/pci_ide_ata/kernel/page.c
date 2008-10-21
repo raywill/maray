@@ -21,6 +21,10 @@
 /* extern in asm */
 int set_page_directory(uint32_t pte);
 
+/*  extern  variable in asm  */
+extern uint32_t* temp_kernel_page_table;
+extern uint32_t* kernel_page_table;
+extern uint32_t* page_directory;
 
 const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
 
@@ -80,8 +84,39 @@ void update_paging()
 {
 
 	uint32_t pte = res_kernel_page_count << PAGE_SHIFT;
-//	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
+	uint32_t cr0 = 0;
+	uint32_t* p;
+	uint32_t ptd = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
+	uint32_t* bad_addr = 0x00000;
+	
+	
+	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
+	//*bad_addr = 1;
 
+#if 0	
+	/* delete first entry in directory manually */
+	p = (uint32_t*)(ptd + 0 * 4);
+	*p = 0;//(pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
+
+	/* disable paging */
+	asm volatile("mov %%cr0, %0": "=b"(cr0));
+	cr0 &= 0x7FFFFFFF;
+	asm volatile("mov %0, %%cr0"::"b"(cr0));
+	
+	kprintf("Disabled paging!!!!!!!!!!!!!\n");
+
+	pte = 0x8000;
+	asm volatile("mov %0, %%cr3":: "b"(pte));
+	//asm volatile("invlpg %0"::"m"(pte));	
+	/* enable paging */
+
+	kprintf("Going to reeanble paging!!!!!!!!!!!!!\n");
+	asm volatile("mov %%cr0, %%eax":);
+	//asm volatile("orl %%cr0, %%eax":);
+	asm volatile("mov %%eax, %%cr0":);
+	//	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
+#endif
+	kprintf("End Do paging!!!!!!!!!!!!!\n");
 }
 
 
@@ -148,6 +183,28 @@ void init_all_pages()
 	 * in page table entrys
 	 */
 	
+	uint32_t* pt;
+
+	pt =(uint32_t*)( PAGE_OFFSET + 0x4000);
+	for(i=0;i<1024;i++)
+	{
+		if (*pt != 0)
+			kprintf("ptd[%d]=%x ",i,*pt);
+		pt++;
+	}
+	
+	kprintf("\n");
+
+	pt = (uint32_t*)(PAGE_OFFSET + 0x5000);
+	for(i=0;i<1024;i++)
+	{
+		if (i%256 == 0)
+			kprintf("pte[%d]=%x ",i,*pt);
+		pt++;
+	}
+
+	kprintf("\n");
+
 	kprintf("init_all_pages()->\n");
 	kprintf("\tinit reserved pages\n");
 	/* Initialize reserved pages */
@@ -191,45 +248,42 @@ void init_page_tables()
 
 	kprintf("init_page_tables()->\n");
 
-	kprintf("\tfill pte\n");
 	/* fill pte */
-	kprintf("pte=%x\n",pte);
+	kprintf("\tfill pte, PageTable Starts At %x\n",pte);
 	memset((void*)pte, 0, ((res_page_count + page_pool_size + 1023)%1024) * PAGE_SIZE);
+
 
 	for (i = 0; i < res_page_count + page_pool_size; i++)
 	{
 		p = (uint32_t*)(pte + i * 4);
 		*p = (i << PAGE_SHIFT) | 0x07;	/* write *physical* address* to pte. */
-		if(i%200==0)
-		{
-			kprintf("[%x]=%x\t",p,*p);
-		}
 		/*
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
 		 */
 	}
 	
-	kprintf("\n");
-
-	kprintf("last pte[%d]=%x\n",i,*p);
-	kprintf("next pte[%d]=%x(should be empty)\n",++i,*(++p));
 
 
-
-	kprintf("\tfill ptd\n");
 	/* fill ptd */
+	kprintf("\tfill ptd, Page TableDirectory Starts At %x\n",ptd);
 	memset((void*)ptd,0,PAGE_SIZE);
-	
-	kprintf("ptd=%x\n",ptd);
 
-	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
+	dir_cnt =1 + (res_page_count + page_pool_size + 1023) >> 10;
 	index = (uint32_t)PAGE_OFFSET>>22;
 
+	/******Special NOTE!**********/
+	/* Identity mapping still needed!
+	 * FUCK INTEL!
+	 */
+	p = (uint32_t*)(ptd + 0 * 4);
+	*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
+
+	
+	/* map our pages to 3G space */
 	for (i = 0; i < dir_cnt ; i++)
 	{	
 		p = (uint32_t*)(ptd + index * 4);
 		*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
-		kprintf("ptd[%d](%x)=0x%x\n",index,p,*p);
 		index++;
 		pte += PAGE_SIZE;
 		

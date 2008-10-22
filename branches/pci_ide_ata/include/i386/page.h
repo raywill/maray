@@ -29,4 +29,24 @@ void init_all_pages();
 void init_page_tables();
 
 
+/*
+ * following TLB functions is migrated from  linux-2.2.26
+ * TLB flushing:
+ *
+ *  - flush_tlb() flushes the current mm struct TLBs
+ *  - flush_tlb_one flush only one page, only supported by i486+.
+ *
+ */
+
+#define flush_tlb() \
+do { unsigned long tmpreg; __asm__ __volatile__("movl %%cr3,%0\n\tmovl %0,%%cr3":"=r" (tmpreg) : :"memory"); } while (0)
+
+#ifndef CONFIG_X86_INVLPG
+#define flush_tlb_one(addr) flush_tlb()
+#else
+#define flush_tlb_one(addr) \
+__asm__ __volatile__("invlpg %0": :"m" (*(char *) addr))
+#endif
+/* end of tlb functions */
+
 #endif

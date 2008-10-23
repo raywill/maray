@@ -77,6 +77,19 @@ void unset_pt(uint32_t* pt_base, uint32_t index)
 }
 
 
+void unmap_first_dir_entry()
+{
+	uint32_t ptd = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
+	uint32_t* p;
+	uint32_t* test;
+	p = (uint32_t*)(ptd + 0 * 4);
+//	flush_tlb();
+	*p = 0;
+
+	asm volatile("nop;nop;nop\r\n");
+	test = (void*)0;
+
+}
 /* after new page framework has been setup
  * we will update paging using this function
  */
@@ -117,6 +130,8 @@ void update_paging()
 	//	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
 #endif
 	kprintf("End Do paging!!!!!!!!!!!!!\n");
+
+	unmap_first_dir_entry();
 }
 
 

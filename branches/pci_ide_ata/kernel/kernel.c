@@ -44,6 +44,7 @@ void osmain( void )
 	init_mm();
    	kprintf( "Memory manager initialized\n" );		  	
 	
+	halt();
 	init_irq();	/*initialize irq,with all interrupte disabled.*/
    	kprintf( "IRQ initialized\n" );
 
@@ -64,7 +65,6 @@ void osmain( void )
 
 	kprintf("\nstart scanning pci devices\n");
 	scan_pci_device();
-	halt();
 
 	kprintf("\nStarting first process....\n");
 	

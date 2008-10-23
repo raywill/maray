@@ -118,14 +118,15 @@ fill_zero_page:		;fill all page directory entries as NULL
 ;At first I didnt do this and kernel crash again and again.
 ;Thanks to the fellows in Mega-tokyo (Now in OSDev)
 identity_map_kernel:
-	mov dword [page_directory-_PAGE_OFFSET+(START_ADDR>>22)*4],temp_kernel_page_table-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((START_ADDR>>22)+0)*4],temp_kernel_page_table+PAGE_SIZE*0-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((START_ADDR>>22)+1)*4],temp_kernel_page_table-PAGE_SIZE*1-_PAGE_OFFSET+7
 	mov eax,7
 	mov ebx,0
 fill_temp_page_table:	
 	mov dword [temp_kernel_page_table-_PAGE_OFFSET+ebx*4],eax
 	add eax,0x1000
 	inc ebx
-	cmp ebx,1023
+	cmp ebx,2047
 	jnz fill_temp_page_table
 
 
@@ -171,8 +172,8 @@ reset_data_seg:
 	mov	fs,ax
 	mov	gs,ax
 	mov	ss,ax
-	mov	esp,0x90000
-	mov	dword [kernel_stack],0x90000		;save kernel esp
+	mov	esp,0xc0100000
+	mov	dword [kernel_stack],0xc0100000	;save kernel esp
 	
 ;install the irq handler
 	mov ecx,(idt_end - idt) >> 3 ; number of exception handlers
@@ -630,99 +631,12 @@ set_page_directory:
 	mov eax,cr0	;enable paging
 	or eax,0x80000000
 	mov cr0,eax
-
-	mov eax,cr3	;invalidate TLB
-	mov cr3,eax
 	
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	xor eax,eax
-	nop
-	nop
-	nop
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-	nop
-	nop	
-
-
 	jmp gdt_code_addr:flush_page_3
 ;ret can also flush the pre-frech queue :)
 flush_page_3:
+	mov eax,cr3	;invalidate TLB
+	mov cr3,eax
 
 	pop ebx
 	pop ebp
@@ -748,7 +662,7 @@ GLOBAL  kernel_page_table
 align 0x1000
 GLOBAL  temp_kernel_page_table	
 	 temp_kernel_page_table:
-		times	0x1000 db 0
+		times	0x2000 db 0
 		
 
 [section .data]

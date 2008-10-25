@@ -26,20 +26,28 @@ extern uint32_t* temp_kernel_page_table;
 extern uint32_t* kernel_page_table;
 extern uint32_t* page_directory;
 
-const uint32_t max_page_count = 32*1024; /* max 128M physical memory */
+#define max_page_count (32*1024) /* max 128M physical memory */
 
 /* Note: Common page allocation starts from res_page_count<<PAGE_SHIFT
  * Low 4M ~ 8M is reserved for bootmem.
  * *Initial* PageTableEntry and PageTableDirectory are resident at this area.
  */
-const uint32_t res_page_count = 2*1024; /* reserve low 8M memory */
-const uint32_t res_kernel_page_count = 1*1024;	/* reserve 4M for kernel */
+#define res_page_count  (2*1024) /* reserve low 8M memory */
+#define res_kernel_page_count  (1*1024)	/* reserve 4M for kernel */
+
 /* reserve 4M~8M area for page table. */
+/* here, we make page table grow down from 8M space */
+#define kptd_page_count  1
+#define kpte_page_count  (max_page_count>>12)
+#define kptd_page_base ((res_page_count-kptd_page_count-kpte_page_count)<<12)
+#define kpte_page_base ((res_page_count-kpte_page_count)<<12)
+
 
 /* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
-uint32_t page_base = /* res_page_count */ (2*1024)<< 12; /* grow up from 8M memory */
-uint32_t page_pool_size = (/*max_page_count*/ 32*1024*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
+#define page_base  (res_page_count<<12); /* grow up from 8M memory */
+#define page_pool_size  (max_page_count*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
 
+page_t* mem_map = (page_t*)page_base;
 
 /* convert between virtual address and physical address */
 uint32_t _v2p(uint32_t vaddr)
@@ -199,6 +207,8 @@ void init_all_pages()
 	 */
 	
 	uint32_t* pt;
+#if 0
+	/* follow two loops are only for debug purpose */
 
 	pt =(uint32_t*)( PAGE_OFFSET + 0x4000);
 	for(i=0;i<1024;i++)
@@ -219,7 +229,7 @@ void init_all_pages()
 	}
 
 	kprintf("\n");
-
+#endif
 	kprintf("init_all_pages()->\n");
 	kprintf("\tinit reserved pages\n");
 	/* Initialize reserved pages */
@@ -248,43 +258,32 @@ void init_all_pages()
  */
 void init_page_tables()
 {
-	uint32_t start = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
-	uint32_t pte;	/* page entry */
-	uint32_t ptd;  /* page directory */
+	uint32_t pte = kpte_page_base;	/* page entry */
+	uint32_t ptd = kptd_page_base;  /* page directory */
 	uint32_t* p = NULL;
 
 	int i = 0, j = 0, k = 0;
 	int dir_cnt = 0; /* directory entrys needs to be set */
 	int index = 0;	/* ptd array index */
 
-
-	ptd = start;
-	pte = start + PAGE_SIZE;
-
 	kprintf("init_page_tables()->\n");
 
 	/* fill pte */
 	kprintf("\tfill pte, PageTable Starts At %x\n",pte);
-	memset((void*)pte, 0, ((res_page_count + page_pool_size + 1023)%1024) * PAGE_SIZE);
+	memset((void*)pte, 0, kpte_page_count * PAGE_SIZE);
 
-
+	/* only init low 8M and the page_t mem_map array */
 	for (i = 0; i < res_page_count + page_pool_size; i++)
 	{
-		p = (uint32_t*)(pte + i * 4);
-		*p = (i << PAGE_SHIFT) | 0x07;	/* write *physical* address* to pte. */
-		/*
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
-		 */
 	}
 	
 
 
 	/* fill ptd */
-	kprintf("\tfill ptd, Page TableDirectory Starts At %x\n",ptd);
+	kprintf("\tfill ptd, Page Table Directory Starts At %x\n",ptd);
 	memset((void*)ptd,0,PAGE_SIZE);
 
-	dir_cnt =1 + (res_page_count + page_pool_size + 1023) >> 10;
-	index = (uint32_t)PAGE_OFFSET>>22;
 
 	/******Special NOTE!**********/
 	/* Identity mapping still needed!
@@ -292,36 +291,31 @@ void init_page_tables()
 	 */
 	p = (uint32_t*)(ptd + 0 * 4);
 	*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
-
+	/**** end identity mapping ***/
 	
+	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
+	index = (uint32_t)PAGE_OFFSET>>22;
 	/* map our pages to 3G space */
 	for (i = 0; i < dir_cnt ; i++)
-	{	
-		p = (uint32_t*)(ptd + index * 4);
-		*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
-		index++;
-		pte += PAGE_SIZE;
-		
-		/*
+	{
 		set_pd((uint32_t*)ptd, index, pte-PAGE_OFFSET);
 		index++;
 		pte += PAGE_SIZE;
-		*/
 	}
 
 	kprintf("end of init\n");
 
 	/* Conclution:
 	 *   'start' tell us where our initial page table locates.
-	 *   In order to init these tables. we should have a temporal
-	 *   page table. We do have such table.
+	 *   In order to init these tables, we should have a temporal
+	 *   page table. We DO have such table.
 	 *
 	 *   Note that 'page pool' is not resident at res_page_count area
-	 *   we should also map it in initial code!!!
+	 *   we should also map it in initialization code!!!
 	 *
 	 *   How much should we map?
-	 *   1. first 8M (2 pages)
-	 *   2. page pool 128k (1 page)
+	 *   1. first 8M (2 page table)
+	 *   2. page pool 128k (1 page table)
 	 *
 	 *   Where should we map to?
 	 *   1. phy + PAGE_OFFSET

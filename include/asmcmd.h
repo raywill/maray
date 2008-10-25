@@ -1,7 +1,6 @@
 #ifndef __ASMCMD
 #define __ASMCMD
 
-
 #define halt() __asm__ __volatile__("hlt")
 #define sti() __asm__ __volatile__("sti")
 #define cli() __asm__ __volatile__("cli")

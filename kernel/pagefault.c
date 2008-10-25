@@ -8,14 +8,21 @@
 
 
 #include <i386/irq.h>
-#include <maray/type.h>
-#include <asmcmd.h>
+#include <i386/types.h>
+#include <i386/pagefault.h>
 #include <i386/vector.h>		/*regs_t*/
 #include <stdio.h>
-#include <pagefault.h>
+#include <asmcmd.h>
 
 
 extern void debug_hlt();
+
+
+/* just for debug */
+bool access_ok(uint32_t vaddr)
+{
+	return false;
+}
 
 void page_fault_handler(regs_t *regs)
 {

@@ -29,4 +29,16 @@ typedef signed int int32_t;
 typedef unsigned int uint32_t;
 #endif
 
+#ifndef bool
+typedef int bool;
+#endif
+
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
+
 #endif /* I386_TYPES_H */

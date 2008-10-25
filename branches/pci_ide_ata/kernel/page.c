@@ -44,8 +44,8 @@ extern uint32_t* page_directory;
 
 
 /* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
-#define page_base  (res_page_count<<12); /* grow up from 8M memory */
-#define page_pool_size  (max_page_count*PAGE_STRUCT_SIZE/4096); /* NOTE: 32 pages, not in bytes */
+#define page_base  (res_page_count<<12) /* grow up from 8M memory */
+#define page_pool_size  (max_page_count*PAGE_STRUCT_SIZE/4096) /* NOTE: 32 pages, not in bytes */
 
 page_t* mem_map = (page_t*)page_base;
 

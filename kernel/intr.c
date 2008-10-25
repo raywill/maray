@@ -34,36 +34,30 @@ void common_interrupt(regs_t *regs)
 		"IRQ12", "IRQ13", "IRQ14", "IRQ15",
 		"syscall"
 	};
-/**/
 
 		
 	switch(regs->which_int)
 	{
-/* this handler installed at compile-time
-Keyboard handler is installed at run-time (see below) */
+	/* this handler installed at compile-time
+	 * Keyboard handler is installed at run-time (see below) 
+	 */
 	case 0x20:	/* timer IRQ 0 */
 		kprintf("Timer\n");
-/* reset hardware interrupt at 8259 chip */
-		outportb(0x20, 0x20);
+		outportb(0x20, 0x20);	/* reset hardware interrupt at 8259 chip */
 		break;
 	case 14:	/* Page Fault */
-		
+		/* following code will be deleted later */
+#if 0
 		kprintf("Error Code:");
 		kprintf("%x", regs->err_code);
 		kprintf("\nAddress:");
 		kprintf("%x\n", regs->eip);
 		kprintf("\nDetails: A Page Fault Occurs! CR2=");
 		kprintf("%x\n", getCR2());
-/*
-		kprint("\nUSER_ESP=");
-		buf[0]='\0';
-		kprint( itoa(regs->user_esp,buf) );
-		kprint("\nUSER_SS=");
-			buf[0]='\0';
-		kprint( itoa((long)regs->user_ss,buf) );
-*/		
-		debug_hlt();	
-/* reset hardware interrupt at 8259 chip */
+#endif
+		/* and be replaced by the following code */
+		page_fault_handler(regs);	/* inefficient? Oh, just let it be! */
+		
 		break;
 	default:
 		clrscr();
@@ -79,3 +73,4 @@ Keyboard handler is installed at run-time (see below) */
 		break;
 	}
 }
+

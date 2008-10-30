@@ -119,7 +119,7 @@ fill_zero_page:		;fill all page directory entries as NULL
 ;Thanks to the fellows in Mega-tokyo (Now in OSDev)
 identity_map_kernel:
 	mov dword [page_directory-_PAGE_OFFSET+((START_ADDR>>22)+0)*4],temp_kernel_page_table+PAGE_SIZE*0-_PAGE_OFFSET+7
-	mov dword [page_directory-_PAGE_OFFSET+((START_ADDR>>22)+1)*4],temp_kernel_page_table-PAGE_SIZE*1-_PAGE_OFFSET+7
+	mov dword [page_directory-_PAGE_OFFSET+((START_ADDR>>22)+1)*4],temp_kernel_page_table+PAGE_SIZE*1-_PAGE_OFFSET+7
 	mov eax,7
 	mov ebx,0
 fill_temp_page_table:	
@@ -136,6 +136,7 @@ fill_presented_page:
 	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+2)*4],kernel_page_table+PAGE_SIZE*2-_PAGE_OFFSET+7
 	mov dword [page_directory-_PAGE_OFFSET+((_PAGE_OFFSET>>22)+3)*4],kernel_page_table+PAGE_SIZE*3-_PAGE_OFFSET+7
 	;mov eax,90007
+
 	mov eax,7
 	mov ebx,0
 fill_page_table:	
@@ -172,8 +173,8 @@ reset_data_seg:
 	mov	fs,ax
 	mov	gs,ax
 	mov	ss,ax
-	mov	esp,0xc0100000
-	mov	dword [kernel_stack],0xc0100000	;save kernel esp
+	mov	esp,0xc0500000	; 5M
+	mov	dword [kernel_stack],0xc0500000	;save kernel esp
 	
 ;install the irq handler
 	mov ecx,(idt_end - idt) >> 3 ; number of exception handlers
@@ -202,10 +203,12 @@ do_idt:
 	mov [edi + 6],ax	; set high 16 bits of gate offset
 
 
-	lidt	[idt_addr-_PAGE_OFFSET]	;load null interrupt describe table
+;	lidt	[idt_addr-_PAGE_OFFSET]	;load null interrupt describe table
+	lidt	[idt_addr]	;load null interrupt describe table
 
 setup_TSS_Selector:
-	mov eax,tss-_PAGE_OFFSET
+;	mov eax,tss-_PAGE_OFFSET
+	mov eax,tss
 	mov word [TR1_seg_sel+2],ax
 	shr eax,16
 	mov byte [TR1_seg_sel+4],al
@@ -616,14 +619,22 @@ set_page_directory:
 	push ebx
 	mov ebp,esp
 
-;	mov ebx,[ebp + 8]	; first parameter, dir address
-
+	mov ebx,[ebp + 12]	; first parameter, dir address
+;	mov ebx,0x7df000	; ptd
+;	mov ebx, 0x4000
 ;	mov eax,cr0	;disable paging
 ;	and eax,0x7fffffff
 ;	mov cr0,eax
 
-	mov eax,0x400000	;setup new directory
+	mov eax,ebx	;setup new directory
 	mov cr3,eax
+
+	nop 
+	nop
+
+	jmp gdt_code_addr:flush_page_4
+;ret can also flush the pre-frech queue :)
+flush_page_4:
 
 	mov eax,cr3	;invalidate TLB
 	mov cr3,eax

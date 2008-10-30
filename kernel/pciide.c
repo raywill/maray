@@ -114,6 +114,7 @@ pciide_setup(uint16_t bus, uint16_t slot,
 	 * actually do nothing
 	 * all parameters are hard-coded
 	 */
+	kprintf("ata_identify_device()\n");
 	ata_identify_device();
 
 	/* setup ISP, PPE, IE, TIME filed */
@@ -127,8 +128,10 @@ pciide_setup(uint16_t bus, uint16_t slot,
 	 */
 	outportb(bar + 0x02, 0x20);
 
+	kprintf("ata_set_feature()\n");
 	ata_set_feature();
 
+	kprintf("ata_readdma_test()\n");
 	/* gogogo */
 	ata_readdma_test();
 }

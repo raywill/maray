@@ -58,7 +58,9 @@ ata_identify_device(void)
 	outportb(0x1f7, 0xec);
 
 	/* wait for disk to be ready */
+	kprintf("waitdisk()");
 	waitdisk();
+	kprintf("end waitdisk()");
 	
 	/* read outputs */
 	insl(0x1f0, info, 128);

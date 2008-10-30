@@ -160,3 +160,31 @@ void kmemset(void *dest,unsigned long size,char c)
 	while(size--)
 		*d++=c;
 }
+
+
+/* compare memory */
+void memory_compare(uint32_t* m1, uint32_t* m2, uint32_t size)
+{
+	int i = 0;
+
+	kprintf("compare memory: %x %x\n", m1,m2);
+
+	for (i = 0; i < size; i++)
+	{
+		if(m1[i]==m2[i])
+		{
+			kprintf("i[%x]: %x\n", i, m1[i]);
+		}
+		else
+		{
+			kprintf("n[%x]: %x %x\n", i, m1[i],m2[i]);
+		}
+	}
+}
+
+
+
+
+
+
+

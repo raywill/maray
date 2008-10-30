@@ -32,22 +32,27 @@ extern uint32_t* page_directory;
  * Low 4M ~ 8M is reserved for bootmem.
  * *Initial* PageTableEntry and PageTableDirectory are resident at this area.
  */
-#define res_page_count  (2*1024) /* reserve low 8M memory */
-#define res_kernel_page_count  (1*1024)	/* reserve 4M for kernel */
 
-/* reserve 4M~8M area for page table. */
+/* reserve low 8M memory */
+#define res_page_count  (2*1024) 
+
+/* within low 8M memory, reserve 0~4M for kernel */
+#define res_kernel_page_count  (1*1024)
+/* reserve 4M~8M area for page table (as page table pool). */
 /* here, we make page table grow down from 8M space */
 #define kptd_page_count  1
-#define kpte_page_count  (max_page_count>>12)
-#define kptd_page_base ((res_page_count-kptd_page_count-kpte_page_count)<<12)
-#define kpte_page_base ((res_page_count-kpte_page_count)<<12)
-
+#define kpte_page_count  (max_page_count>>10)
+/* ptd is lower than pte here */
+#define kptd_page_base ((uint32_t)((res_page_count - kptd_page_count - kpte_page_count)<<12))
+#define kpte_page_base ((uint32_t)((res_page_count - kpte_page_count)<<12))
 
 /* we have mapped 4*4M=16M physical memory from the start of RAM. Should enough */
 #define page_base  (res_page_count<<12) /* grow up from 8M memory */
-#define page_pool_size  (max_page_count*PAGE_STRUCT_SIZE/4096) /* NOTE: 32 pages, not in bytes */
+#define page_pool_size  ((max_page_count * PAGE_STRUCT_SIZE)/4096) /* NOTE: 32 pages, not in bytes */
 
 page_t* mem_map = (page_t*)page_base;
+
+
 
 /* convert between virtual address and physical address */
 uint32_t _v2p(uint32_t vaddr)
@@ -64,13 +69,14 @@ uint32_t _p2v(uint32_t paddr)
 /* operations on page directory and page table */
 void set_pd(uint32_t* pd_base, uint32_t index, uint32_t val)
 {
-	pd_base[index] = val<<12 | 0x07;	/* User&Supervisor, R&W, Present */
+
+	pd_base[index] = (val & 0xFFFFF000) | 0x07;	/* User&Supervisor, R&W, Present */
 }
 
 
 void set_pt(uint32_t* pt_base, uint32_t index, uint32_t val)
 {
-	pt_base[index] = val<<12 | 0x07;	/* User&Supervisor, R&W, Present */
+	pt_base[index] = (val & 0xFFFFF000) | 0x07;	/* User&Supervisor, R&W, Present */
 }
 
 void unset_pd(uint32_t* pd_base, uint32_t index)
@@ -87,16 +93,13 @@ void unset_pt(uint32_t* pt_base, uint32_t index)
 
 void unmap_first_dir_entry()
 {
-	uint32_t ptd = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
+/*	uint32_t ptd = kptd_page_base;
 	uint32_t* p;
-	uint32_t* test;
 	p = (uint32_t*)(ptd + 0 * 4);
-//	flush_tlb();
 	*p = 0;
-
-	asm volatile("nop;nop;nop\r\n");
-	test = (void*)0;
-
+	flush_tlb();
+*/
+//	unset_pd((uint32_t*)kptd_page_base, 0);
 }
 /* after new page framework has been setup
  * we will update paging using this function
@@ -104,44 +107,32 @@ void unmap_first_dir_entry()
 void update_paging()
 {
 
-	uint32_t pte = res_kernel_page_count << PAGE_SHIFT;
+	uint32_t pte = kpte_page_base;
 	uint32_t cr0 = 0;
 	uint32_t* p;
-	uint32_t ptd = (uint32_t)PAGE_OFFSET + (res_kernel_page_count << PAGE_SHIFT);
+	uint32_t ptd = kptd_page_base;
 	uint32_t* bad_addr = 0x00000;
 	
+
+	kprintf("pte = %x ",pte);	
+	kprintf("ptd = %x\n",ptd);	
+	set_page_directory(ptd);
 	
-	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
-	//*bad_addr = 1;
-
-#if 0	
-	/* delete first entry in directory manually */
-	p = (uint32_t*)(ptd + 0 * 4);
-	*p = 0;//(pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
-
-	/* disable paging */
-	asm volatile("mov %%cr0, %0": "=b"(cr0));
-	cr0 &= 0x7FFFFFFF;
-	asm volatile("mov %0, %%cr0"::"b"(cr0));
-	
-	kprintf("Disabled paging!!!!!!!!!!!!!\n");
-
-	pte = 0x8000;
-	asm volatile("mov %0, %%cr3":: "b"(pte));
-	//asm volatile("invlpg %0"::"m"(pte));	
-	/* enable paging */
-
-	kprintf("Going to reeanble paging!!!!!!!!!!!!!\n");
-	asm volatile("mov %%cr0, %%eax":);
-	//asm volatile("orl %%cr0, %%eax":);
-	asm volatile("mov %%eax, %%cr0":);
-	//	kprintf("set_page_directory(pte)->%x, pte=%x\n",set_page_directory(pte),pte);
+#ifdef __KERNEL_DEBUG__
+{
+	uint32_t* p1;
+	uint32_t* p2;
+	p1 = (uint32_t*)0xc07e0000;
+	p2 = (uint32_t*)0x5000;	
+	memory_compare(p1,p2,10);
+}
 #endif
-	kprintf("End Do paging!!!!!!!!!!!!!\n");
-
+	/* This action still cause bugs, including
+	 * IDT, GDT, TSS etc.
+	 * All their base values needs adjust
+	 **/
 	unmap_first_dir_entry();
 }
-
 
 
 /* incomplete!!! */
@@ -238,7 +229,7 @@ void init_all_pages()
 		pg = (page_t*)(_p2v(page_base) + i*PAGE_STRUCT_SIZE);
 		pg->ref_count = 1;
 		pg->index = i;
-		pg->virtual = PAGE_OFFSET + i << PAGE_SHIFT ;
+		pg->virtual = PAGE_OFFSET + (i << PAGE_SHIFT) ;
 	}
 
 	kprintf("\tinit free pages\n");
@@ -258,22 +249,25 @@ void init_all_pages()
  */
 void init_page_tables()
 {
-	uint32_t pte = kpte_page_base;	/* page entry */
-	uint32_t ptd = kptd_page_base;  /* page directory */
+	uint32_t pte = PAGE_OFFSET + kpte_page_base;	/* page entry */
+	uint32_t ptd = PAGE_OFFSET + kptd_page_base;  /* page directory */
+	uint32_t pt = 0;
 	uint32_t* p = NULL;
 
 	int i = 0, j = 0, k = 0;
 	int dir_cnt = 0; /* directory entrys needs to be set */
+	int entry_cnt = 0; /* page entrys needs to be set */
 	int index = 0;	/* ptd array index */
 
 	kprintf("init_page_tables()->\n");
 
 	/* fill pte */
-	kprintf("\tfill pte, PageTable Starts At %x\n",pte);
-	memset((void*)pte, 0, kpte_page_count * PAGE_SIZE);
+	memset((void*)pte, 13, kpte_page_count * PAGE_SIZE);
 
+	kprintf("\t pte clear, Page Table Starts At %x\n",pte);
 	/* only init low 8M and the page_t mem_map array */
-	for (i = 0; i < res_page_count + page_pool_size; i++)
+	entry_cnt = (res_page_count + page_pool_size);
+	for (i = 0; i < entry_cnt; i++)
 	{
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
 	}
@@ -289,18 +283,30 @@ void init_page_tables()
 	/* Identity mapping still needed!
 	 * FUCK INTEL!
 	 */
+#if 0
 	p = (uint32_t*)(ptd + 0 * 4);
 	*p = (pte - PAGE_OFFSET) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
-	/**** end identity mapping ***/
+	p = (uint32_t*)(ptd + 1 * 4);
+	*p = (pte - PAGE_OFFSET + PAGE_SIZE) & (~0xFFF)  | 0x07;	/* write *physical* address* to ptd. */
+#endif
 	
+	pt = kpte_page_base;	/* note: physical address! */
+	/* identify mapping first 16M */
+	for (i = 0; i < 4 ; i++)
+	{
+		set_pd((uint32_t*)ptd, i, pt);
+		pt += PAGE_SIZE;
+	}
+
+	/**** end identity mapping ***/
 	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
 	index = (uint32_t)PAGE_OFFSET>>22;
+	pt = kpte_page_base;
 	/* map our pages to 3G space */
-	for (i = 0; i < dir_cnt ; i++)
+	for (i = index; i < index + dir_cnt ; i++)
 	{
-		set_pd((uint32_t*)ptd, index, pte-PAGE_OFFSET);
-		index++;
-		pte += PAGE_SIZE;
+		set_pd((uint32_t*)ptd, i, pt);
+		pt += PAGE_SIZE;
 	}
 
 	kprintf("end of init\n");
@@ -321,3 +327,4 @@ void init_page_tables()
 	 *   1. phy + PAGE_OFFSET
 	 */
 }
+

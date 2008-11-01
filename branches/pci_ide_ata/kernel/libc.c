@@ -136,7 +136,7 @@ insl(int port, void *ptr, int cnt)
 			     : "memory", "cc");
 }
 
-void kmemcpy(const void *scr, void *dest,unsigned long size)
+void kmemcpy(void *dest,void *scr,unsigned long size)
 {
 	const char *s = scr;
 	char *d = dest;

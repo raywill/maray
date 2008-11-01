@@ -33,18 +33,31 @@ void osmain( void )
 	int i;
 	int j=0;
 	char nb[10];
-	
+	uint32_t* vp = NULL;
+
 	char tmbuf[30];
 	
 	
+	init_mm();
+   	kprintf( "Memory manager initialized\n" );
+
 	/* ini screen first,so that we can output info as early as possible */
 	init_tty();	/*	initialize the screen*/	
    	kprintf( "TTY initialized\n" );
 	
-	init_mm();
-   	kprintf( "Memory manager initialized\n" );		  	
+	vp = vm_alloc_page();
+	kprintf("vp = %x\t", vp);
+
+	*vp = 123;	
+	vp = vm_alloc_page();
+	kprintf("vp = %x\t", vp);
 	
-	//halt();
+	vp = vm_alloc_page();
+	*vp = 123;	
+	kprintf("vp = %x\t", vp);
+	*vp = 123;	
+
+
 	init_irq();	/*initialize irq,with all interrupte disabled.*/
    	kprintf( "IRQ initialized\n" );
 
@@ -66,7 +79,8 @@ void osmain( void )
 	kprintf("\nstart scanning pci devices\n");
 	scan_pci_device();
 
-	kprintf("system halt!\n");
+	kprintf("system halt!\n");	
+	while(1);
 	halt();
 
 	kprintf("\nStarting first process....\n");

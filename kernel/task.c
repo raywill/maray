@@ -190,10 +190,6 @@ void init_all_tasks()
 		 */
 		ULONG *sp;
 		task_struct_list[t]->pid=t;
-//		task_struct_list[t]->esp=KERNEL_STACK_OFFSET+(t+1)*PAGE_SIZE-1;
-//		task_struct_list[t]->ss=__KERNEL_DS;
-
-//	kmemcpy(task_struct_list[t],KERNEL_STACK_OFFSET+t*PAGE_SIZE,sizeof(struct task_struct) );
 
 		task_struct_list[t]->esp=0xC0010fff+t*0x1000;
 		task_struct_list[t]->esp0=task_struct_list[t]->esp;

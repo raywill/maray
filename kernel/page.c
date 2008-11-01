@@ -91,6 +91,16 @@ void unset_pt(uint32_t* pt_base, uint32_t index)
 }
 
 
+/* map physical page to virtual space */
+uint32_t map_page(page_t* pg)
+{
+	uint32_t* pt_base = (uint32_t*)(kpte_page_base + PAGE_OFFSET);
+	set_pt(pt_base, pg->index, pg->index<<PAGE_SHIFT);
+	pg->virtual = _p2v(pg->index<<PAGE_SHIFT);
+	return pg->virtual;
+}
+
+
 void unmap_first_dir_entry()
 {
 /*	uint32_t ptd = kptd_page_base;
@@ -119,13 +129,13 @@ void update_paging()
 	set_page_directory(ptd);
 	
 #ifdef __KERNEL_DEBUG__
-{
+	{
 	uint32_t* p1;
 	uint32_t* p2;
 	p1 = (uint32_t*)0xc07e0000;
 	p2 = (uint32_t*)0x5000;	
 	memory_compare(p1,p2,10);
-}
+	}
 #endif
 	/* This action still cause bugs, including
 	 * IDT, GDT, TSS etc.
@@ -136,25 +146,38 @@ void update_paging()
 
 
 /* incomplete!!! */
-#if 0
-void* alloc_zeroed_page()
+#if 1
+void* vm_alloc_zeroed_page()
 {
 	page_t* pg = NULL;
-	uint32_t paddr;
-	uint32_t vaddr = NULL;
+	void* vaddr = NULL;
 
 	/* allocate a page */
-	pg = (page_t*)alloc_page();
+	pg = alloc_page();
 
 	/* map the page */
-	paddr = pg->index << 12;
-	vaddr = _p2v(paddr);	/* default operation in kernel space */
-	map_page(paddr, vaddr);	/* map physical page to virtual space */
+	vaddr = (void*)map_page(pg);	/* map physical page to virtual space */
 	
 	/* zero the page and return */
 	memset(vaddr,0, PAGE_SIZE);
+
 	return vaddr;
 }
+
+void* vm_alloc_page()
+{
+	page_t* pg = NULL;
+	void* vaddr = NULL;
+
+	/* allocate a page */
+	pg = alloc_page();
+
+	/* map the page */
+	vaddr =(void*)map_page(pg);	/* map physical page to virtual space */
+
+	return vaddr;
+}
+
 #endif
 
 /* Allocate a free page.
@@ -180,6 +203,7 @@ page_t* alloc_page()
 			break;	/* got a free page */
 		}
 	}
+	pg->ref_count++;
 	return pg;	
 }
 
@@ -257,6 +281,7 @@ void init_page_tables()
 	int i = 0, j = 0, k = 0;
 	int dir_cnt = 0; /* directory entrys needs to be set */
 	int entry_cnt = 0; /* page entrys needs to be set */
+	int total_entry_cnt = 0; /*all page entry count */
 	int index = 0;	/* ptd array index */
 
 	kprintf("init_page_tables()->\n");
@@ -267,9 +292,14 @@ void init_page_tables()
 	kprintf("\t pte clear, Page Table Starts At %x\n",pte);
 	/* only init low 8M and the page_t mem_map array */
 	entry_cnt = (res_page_count + page_pool_size);
+	total_entry_cnt = max_page_count;
 	for (i = 0; i < entry_cnt; i++)
 	{
 		set_pt((uint32_t*)pte, i, i<<PAGE_SHIFT);
+	}
+	for(;i < total_entry_cnt; i++)
+	{
+		unset_pt((uint32_t*)pte,i);
 	}
 	
 
@@ -299,7 +329,14 @@ void init_page_tables()
 	}
 
 	/**** end identity mapping ***/
-	dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
+	
+	
+	//dir_cnt = (res_page_count + page_pool_size + 1023) >> 10;
+	/* Map all directory entrys above 3G! 
+	 * However, page table entrys not mapped yet
+	 * so that all invalid access to pages can still be captured
+	 */
+	dir_cnt = max_page_count >> 10;
 	index = (uint32_t)PAGE_OFFSET>>22;
 	pt = kpte_page_base;
 	/* map our pages to 3G space */

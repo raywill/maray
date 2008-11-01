@@ -7,11 +7,12 @@
 */
 
 #include <maray/keymap.h>	/* 	nothing				*/
-#include <maray/type.h>			/* 	define 'byte' */
-#include <maray/kb.h>			/* 	init_kb()			*/
-#include <i386/irq.h>			/*	enalbe_irq()	*/
+#include <maray/type.h>		/* 	define 'byte' 			*/
+#include <maray/kb.h>		/* 	init_kb()			*/
+#include <maray/tty.h>		/* 	scroll screen			*/
+#include <i386/irq.h>		/*	enalbe_irq()			*/
 #include <i386/vector.h>	/*	setvect()			*/
-#include <libc.h>					/*	inportb()	,outportb()		*/
+#include <libc.h>		/*	inportb()	,outportb()	*/
 #include <i386/timer.h>
 #include <stdio.h>
 
@@ -71,13 +72,17 @@ static void kb_irq(void)
 	
 	if(i<sizeof(Scan_Tab) )
 	{
-		kprintf("%c", Disp_Tab[i]);
 		switch (Disp_Tab[i]) {
 			case 'X': enable_timer();
 				  break;
 			case 'R': disable_timer();
 				  break;
+			case 'J': scroll_screen_up();
+				  break;
 			case 'S': reset_sys();
+				  break;
+			default:
+				kprintf("%c", Disp_Tab[i]);
 		}
 	}
 	outportb(0x20,0x20);

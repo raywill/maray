@@ -14,6 +14,12 @@
 
 extern void debug_hlt();
 
+static void dump(regs_t *regs)
+{
+	kprintf("EIP=%x\t ESP=%x\n", regs->eip, regs->esp);
+	return;
+}
+
 void common_interrupt(regs_t *regs)
 {
 	char buf[20]={0};
@@ -66,6 +72,8 @@ void common_interrupt(regs_t *regs)
 			kprintf(msg[regs->which_int]);
 		else
 			kprintf("%d\n", regs->which_int );
+		dump(regs);
+
 		cli();
 		halt();
 		while(1)

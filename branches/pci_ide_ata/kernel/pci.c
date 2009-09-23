@@ -12,11 +12,12 @@ read_pci_reg(uint16_t bus, uint16_t slot,
 	uint32_t lslot = slot;
 	uint32_t lfunc = func;
 
+	/* address must be 4 bytes aligned */
 	address = (lbus << 16) | (lslot << 11) | (lfunc << 8) |
 	    (offset & 0xfc) | 0x80000000;
 
-	outportl(0xcf8, address);
-	return inportl(0xcfc);
+	outportl(0xcf8, address); /* 4 bytes aligned address */
+	return inportl(0xcfc);	/* return 4 bytes long result */
 }
 
 void 

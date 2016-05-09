@@ -1,3 +1,5 @@
+This is a kernel project. A small kernel is presented for students who is interested in kernel programming.
+
 First you need djgpp (gcc Windows version) to compile .
 
 Excute make && make install in kernel/.
